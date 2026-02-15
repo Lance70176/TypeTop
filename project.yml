@@ -11,7 +11,7 @@ settings:
     SWIFT_VERSION: "5.10"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     ENABLE_HARDENED_RUNTIME: true
-    CODE_SIGN_IDENTITY: "TypeTop Developer"
+    CODE_SIGN_IDENTITY: "-"
     PRODUCT_BUNDLE_IDENTIFIER: com.typetop.app
 
 targets:

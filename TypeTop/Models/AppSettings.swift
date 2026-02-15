@@ -43,8 +43,11 @@ struct AppSettings: Codable {
     /// LLM 使用的供應商（獨立於語音辨識供應商）
     var llmProvider: LLMProvider = .openai
 
+    /// LLM 修正程度
+    var llmCorrectionLevel: LLMCorrectionLevel = .medium
+
     /// LLM 後處理系統提示詞
-    var llmSystemPrompt: String = AppSettings.defaultLLMPrompt
+    var llmSystemPrompt: String = LLMCorrectionLevel.medium.defaultPrompt
 
     /// 自訂 LLM Base URL（僅 llmProvider == .custom 時使用）
     var customLLMBaseURL: String = ""
@@ -52,17 +55,7 @@ struct AppSettings: Codable {
     /// 自訂 LLM 模型名稱（僅 llmProvider == .custom 時使用）
     var customLLMModel: String = ""
 
-    static let defaultLLMPrompt = """
-        你是語音輸入的改寫助手。使用者透過語音輸入文字，你要理解他的意思，然後用通順的書面語重新寫出來。
-
-        規則：
-        1. 先理解語意，再用清晰的書面中文改寫，去除口語贅詞（嗯、那個、就是說）
-        2. 使用繁體中文，不要用簡體
-        3. 加上適當的標點符號，讓句子結構清晰
-        4. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
-        5. 保持原意，但可以調整語序和用詞讓表達更精確
-        6. 直接輸出改寫後的文字，不要加任何解釋
-        """
+    static let defaultLLMPrompt = LLMCorrectionLevel.medium.defaultPrompt
 
     /// 自訂解碼器，確保新增欄位在舊設定檔中有預設值
     init(from decoder: Decoder) throws {
@@ -90,7 +83,8 @@ struct AppSettings: Codable {
         } else {
             llmProvider = .openai
         }
-        llmSystemPrompt = try container.decodeIfPresent(String.self, forKey: .llmSystemPrompt) ?? AppSettings.defaultLLMPrompt
+        llmCorrectionLevel = try container.decodeIfPresent(LLMCorrectionLevel.self, forKey: .llmCorrectionLevel) ?? .medium
+        llmSystemPrompt = try container.decodeIfPresent(String.self, forKey: .llmSystemPrompt) ?? llmCorrectionLevel.defaultPrompt
         customLLMBaseURL = try container.decodeIfPresent(String.self, forKey: .customLLMBaseURL) ?? ""
         customLLMModel = try container.decodeIfPresent(String.self, forKey: .customLLMModel) ?? ""
     }
@@ -129,16 +123,100 @@ enum SupportedLanguage: String, Codable, CaseIterable, Identifiable {
     var tag: String { rawValue }
 }
 
+/// LLM 修正程度
+enum LLMCorrectionLevel: String, Codable, CaseIterable, Identifiable {
+    case none = "none"
+    case light = "light"
+    case medium = "medium"
+    case heavy = "heavy"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .none: return "無修正"
+        case .light: return "輕微"
+        case .medium: return "中等"
+        case .heavy: return "重度"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .none: return "僅加標點符號，完全保留原文"
+        case .light: return "修正錯字、加標點，保留口語風格"
+        case .medium: return "改寫為書面語，去除贅詞"
+        case .heavy: return "大幅精煉，重組句子結構"
+        }
+    }
+
+    var defaultPrompt: String {
+        switch self {
+        case .none:
+            return """
+                你是語音輸入的標點助手。使用者透過語音輸入文字，你只需要加上標點符號。
+
+                規則：
+                1. 完全保留原文的每一個字，不要刪除、替換或改寫任何詞語
+                2. 只加上適當的標點符號（逗號、句號、問號、驚嘆號）
+                3. 使用繁體中文標點
+                4. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
+                5. 直接輸出結果，不要加任何解釋
+                """
+        case .light:
+            return """
+                你是語音輸入的修正助手。使用者透過語音輸入文字，你要做最小幅度的修正。
+
+                規則：
+                1. 保留原文的語氣和用詞風格，包括口語表達
+                2. 只修正明顯的錯字和語音辨識錯誤
+                3. 加上適當的標點符號
+                4. 使用繁體中文，不要用簡體
+                5. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
+                6. 不要刪除任何內容，不要改變語序
+                7. 直接輸出修正後的文字，不要加任何解釋
+                """
+        case .medium:
+            return """
+                你是語音輸入的改寫助手。使用者透過語音輸入文字，你要理解他的意思，然後用通順的書面語重新寫出來。
+
+                規則：
+                1. 先理解語意，再用清晰的書面中文改寫，去除口語贅詞（嗯、那個、就是說）
+                2. 使用繁體中文，不要用簡體
+                3. 加上適當的標點符號，讓句子結構清晰
+                4. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
+                5. 保持原意，但可以調整語序和用詞讓表達更精確
+                6. 直接輸出改寫後的文字，不要加任何解釋
+                """
+        case .heavy:
+            return """
+                你是語音輸入的精煉助手。使用者透過語音輸入文字，你要將內容大幅精煉為精確、簡潔的書面語。
+
+                規則：
+                1. 深度理解語意後，用最精煉的書面中文重新表達
+                2. 刪除所有口語贅詞、重複表達和不必要的修飾
+                3. 重組句子結構，讓邏輯更清晰
+                4. 使用繁體中文，不要用簡體
+                5. 加上適當的標點符號
+                6. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
+                7. 直接輸出精煉後的文字，不要加任何解釋
+                """
+        }
+    }
+}
+
 /// 標點符號風格
 enum PunctuationStyle: String, Codable, CaseIterable {
     case fullWidth = "fullWidth"   // 全形：，。！？
     case halfWidth = "halfWidth"   // 半形：,.!?
+    case none = "none"             // 移除所有標點符號
     case keep = "keep"             // 保持 API 回傳的原樣
 
     var displayName: String {
         switch self {
         case .fullWidth: return "全形標點"
         case .halfWidth: return "半形標點"
+        case .none: return "無標點符號"
         case .keep: return "保持原樣"
         }
     }

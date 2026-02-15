@@ -33,7 +33,7 @@ struct LanguageSettingsTab: View {
                     }
                 }
 
-                Text("全形：，。！？　半形：,.!?　保持原樣：不轉換")
+                Text("全形：，。！？　半形：,.!?　無標點：移除全部　保持原樣：不轉換")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -85,16 +85,28 @@ struct LanguageSettingsTab: View {
             }
 
             Section("LLM 系統提示詞") {
+                Picker("修正程度", selection: Binding(
+                    get: { settingsStore.settings.llmCorrectionLevel },
+                    set: { newLevel in
+                        settingsStore.settings.llmCorrectionLevel = newLevel
+                        settingsStore.settings.llmSystemPrompt = newLevel.defaultPrompt
+                    }
+                )) {
+                    ForEach(LLMCorrectionLevel.allCases) { level in
+                        Text("\(level.displayName) — \(level.description)").tag(level)
+                    }
+                }
+
                 TextEditor(text: Bindable(settingsStore).settings.llmSystemPrompt)
                     .frame(height: 120)
                     .font(.system(.caption, design: .monospaced))
 
-                Text("系統提示詞決定 LLM 如何改寫文字。可依需求調整，例如改為更正式的書面語、或保留口語風格。")
+                Text("選擇修正程度會自動套用預設提示詞，也可手動編輯。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Button("重置為預設") {
-                    settingsStore.settings.llmSystemPrompt = AppSettings().llmSystemPrompt
+                Button("重置為目前程度的預設") {
+                    settingsStore.settings.llmSystemPrompt = settingsStore.settings.llmCorrectionLevel.defaultPrompt
                 }
             }
             .disabled(!settingsStore.settings.enableLLMPostProcessing)

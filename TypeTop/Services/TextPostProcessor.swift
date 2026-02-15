@@ -106,7 +106,18 @@ struct TextPostProcessor {
             return applyPunctuationMapping(text, mapping: Self.halfToFull)
         case .halfWidth:
             return applyPunctuationMapping(text, mapping: Self.fullToHalf)
+        case .none:
+            return removePunctuation(text)
         }
+    }
+
+    private func removePunctuation(_ text: String) -> String {
+        var result = text
+        let allPunctuation = Self.halfToFull.flatMap { [$0.0, $0.1] }
+        for p in allPunctuation {
+            result = result.replacingOccurrences(of: p, with: "")
+        }
+        return result
     }
 
     private func applyPunctuationMapping(_ text: String, mapping: [(String, String)]) -> String {
