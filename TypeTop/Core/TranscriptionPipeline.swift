@@ -39,6 +39,7 @@ final class TranscriptionPipeline {
     /// 取消目前錄音
     func cancelRecording() {
         guard state == .recording else { return }
+        AppDelegate.shared.updateStatusIcon(isRecording: false)
 
         _ = audioRecorder.stopRecording() // 丟棄音訊
         state = .cancelled
@@ -110,6 +111,7 @@ final class TranscriptionPipeline {
         do {
             try audioRecorder.startRecording()
             state = .recording
+            AppDelegate.shared.updateStatusIcon(isRecording: true)
 
             // 播放開始音效
             if settingsStore.settings.playSoundEffects {
@@ -122,6 +124,7 @@ final class TranscriptionPipeline {
 
     func stopRecordingAndTranscribe() {
         guard state == .recording else { return }
+        AppDelegate.shared.updateStatusIcon(isRecording: false)
 
         guard let audioData = audioRecorder.stopRecording() else {
             state = .idle

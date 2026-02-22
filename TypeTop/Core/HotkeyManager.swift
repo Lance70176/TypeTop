@@ -26,8 +26,9 @@ final class HotkeyManager {
             return false
         }
 
-        // 監聽修飾鍵變化
+        // 監聽修飾鍵變化 + 一般按鍵（錄音中按任意鍵取消）
         let eventMask: CGEventMask = (1 << CGEventType.flagsChanged.rawValue)
+            | (1 << CGEventType.keyDown.rawValue)
 
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -72,6 +73,15 @@ final class HotkeyManager {
                 CGEvent.tapEnable(tap: tap, enable: true)
             }
             return Unmanaged.passRetained(event)
+        }
+
+        // 錄音中按下任意一般按鍵 → 取消
+        if type == .keyDown && isHotkeyPressed {
+            isHotkeyPressed = false
+            DispatchQueue.main.async { [weak self] in
+                self?.onCancel?()
+            }
+            return nil
         }
 
         guard type == .flagsChanged else {
