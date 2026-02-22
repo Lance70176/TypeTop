@@ -28,6 +28,7 @@ enum TranscriptionState: Equatable {
     case recording
     case processing
     case completed(String)
+    case cancelled
     case error(String)
 
     var isRecording: Bool {
@@ -46,6 +47,7 @@ enum TranscriptionState: Equatable {
         case .recording: return "錄音中..."
         case .processing: return "辨識中..."
         case .completed(let text): return "完成：\(text.prefix(20))..."
+        case .cancelled: return "已取消"
         case .error(let msg): return "錯誤：\(msg)"
         }
     }

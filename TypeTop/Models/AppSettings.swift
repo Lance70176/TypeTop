@@ -1,4 +1,46 @@
 import Foundation
+import CoreGraphics
+
+/// 啟動快捷鍵選項
+enum ActivationKey: UInt16, Codable, CaseIterable, Identifiable {
+    case rightCommand = 54
+    case leftCommand = 55
+    case rightOption = 61
+    case leftOption = 58
+    case rightControl = 62
+    case leftControl = 59
+    case fn = 63
+
+    var id: UInt16 { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .rightCommand: return "右側 ⌘"
+        case .leftCommand: return "左側 ⌘"
+        case .rightOption: return "右側 ⌥"
+        case .leftOption: return "左側 ⌥"
+        case .rightControl: return "右側 ⌃"
+        case .leftControl: return "左側 ⌃"
+        case .fn: return "fn"
+        }
+    }
+
+    /// 對應的 CGEventFlags mask
+    var flagMask: CGEventFlags {
+        switch self {
+        case .rightCommand, .leftCommand: return .maskCommand
+        case .rightOption, .leftOption: return .maskAlternate
+        case .rightControl, .leftControl: return .maskControl
+        case .fn: return .maskSecondaryFn
+        }
+    }
+
+    /// 除了自身 flagMask 以外的所有修飾鍵 mask，用於偵測取消
+    var cancelMasks: [CGEventFlags] {
+        let allMasks: [CGEventFlags] = [.maskCommand, .maskAlternate, .maskControl, .maskSecondaryFn]
+        return allMasks.filter { $0 != self.flagMask }
+    }
+}
 
 /// 應用程式設定
 struct AppSettings: Codable {
@@ -19,11 +61,8 @@ struct AppSettings: Codable {
     /// 標點符號偏好
     var punctuationStyle: PunctuationStyle = .fullWidth
 
-    /// 全域快捷鍵修飾鍵
-    var hotkeyModifiers: UInt = 0x00080000 // NSEvent.ModifierFlags.option
-
-    /// 全域快捷鍵鍵碼
-    var hotkeyKeyCode: UInt16 = 54 // Right Command
+    /// 按住說話啟動鍵
+    var activationKey: ActivationKey = .rightCommand
 
     /// 是否開機自啟動
     var launchAtLogin: Bool = false
@@ -57,6 +96,15 @@ struct AppSettings: Codable {
 
     static let defaultLLMPrompt = LLMCorrectionLevel.medium.defaultPrompt
 
+    private enum CodingKeys: String, CodingKey {
+        case activeProvider, primaryLanguage, mixedLanguageMode, autoSpaceBetweenCJKAndLatin
+        case punctuationStyle, activationKey, launchAtLogin, playSoundEffects
+        case whisperPrompt, autoSendDelay, enableLLMPostProcessing, llmProvider
+        case llmCorrectionLevel, llmSystemPrompt, customLLMBaseURL, customLLMModel
+        // 舊 key，僅用於向後相容解碼
+        case hotkeyKeyCode
+    }
+
     /// 自訂解碼器，確保新增欄位在舊設定檔中有預設值
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -65,8 +113,14 @@ struct AppSettings: Codable {
         mixedLanguageMode = try container.decodeIfPresent(Bool.self, forKey: .mixedLanguageMode) ?? true
         autoSpaceBetweenCJKAndLatin = try container.decodeIfPresent(Bool.self, forKey: .autoSpaceBetweenCJKAndLatin) ?? true
         punctuationStyle = try container.decodeIfPresent(PunctuationStyle.self, forKey: .punctuationStyle) ?? .fullWidth
-        hotkeyModifiers = try container.decodeIfPresent(UInt.self, forKey: .hotkeyModifiers) ?? 0x00080000
-        hotkeyKeyCode = try container.decodeIfPresent(UInt16.self, forKey: .hotkeyKeyCode) ?? 54
+        // 向後相容：若舊設定有 hotkeyKeyCode，映射為 ActivationKey
+        if let key = try container.decodeIfPresent(ActivationKey.self, forKey: .activationKey) {
+            activationKey = key
+        } else if let oldKeyCode = try container.decodeIfPresent(UInt16.self, forKey: .hotkeyKeyCode) {
+            activationKey = ActivationKey(rawValue: oldKeyCode) ?? .rightCommand
+        } else {
+            activationKey = .rightCommand
+        }
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         playSoundEffects = try container.decodeIfPresent(Bool.self, forKey: .playSoundEffects) ?? true
         whisperPrompt = try container.decodeIfPresent(String.self, forKey: .whisperPrompt) ?? "繁體中文語音輸入，可能包含英文單字如 API、iPhone、React、TypeScript、macOS 等技術術語。"
@@ -87,6 +141,26 @@ struct AppSettings: Codable {
         llmSystemPrompt = try container.decodeIfPresent(String.self, forKey: .llmSystemPrompt) ?? llmCorrectionLevel.defaultPrompt
         customLLMBaseURL = try container.decodeIfPresent(String.self, forKey: .customLLMBaseURL) ?? ""
         customLLMModel = try container.decodeIfPresent(String.self, forKey: .customLLMModel) ?? ""
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(activeProvider, forKey: .activeProvider)
+        try container.encode(primaryLanguage, forKey: .primaryLanguage)
+        try container.encode(mixedLanguageMode, forKey: .mixedLanguageMode)
+        try container.encode(autoSpaceBetweenCJKAndLatin, forKey: .autoSpaceBetweenCJKAndLatin)
+        try container.encode(punctuationStyle, forKey: .punctuationStyle)
+        try container.encode(activationKey, forKey: .activationKey)
+        try container.encode(launchAtLogin, forKey: .launchAtLogin)
+        try container.encode(playSoundEffects, forKey: .playSoundEffects)
+        try container.encode(whisperPrompt, forKey: .whisperPrompt)
+        try container.encode(autoSendDelay, forKey: .autoSendDelay)
+        try container.encode(enableLLMPostProcessing, forKey: .enableLLMPostProcessing)
+        try container.encode(llmProvider, forKey: .llmProvider)
+        try container.encode(llmCorrectionLevel, forKey: .llmCorrectionLevel)
+        try container.encode(llmSystemPrompt, forKey: .llmSystemPrompt)
+        try container.encode(customLLMBaseURL, forKey: .customLLMBaseURL)
+        try container.encode(customLLMModel, forKey: .customLLMModel)
     }
 }
 

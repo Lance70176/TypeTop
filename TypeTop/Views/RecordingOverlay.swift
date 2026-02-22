@@ -102,6 +102,7 @@ struct RecordingOverlayView: View {
         switch state {
         case .recording: return .red
         case .processing: return .orange
+        case .cancelled: return .yellow
         default: return .green
         }
     }
@@ -110,6 +111,7 @@ struct RecordingOverlayView: View {
         switch state {
         case .recording: return "錄音中"
         case .processing: return "辨識中"
+        case .cancelled: return "已取消"
         default: return ""
         }
     }

@@ -8,13 +8,14 @@ final class HotkeyManager {
 
     var onKeyDown: (() -> Void)?
     var onKeyUp: (() -> Void)?
+    var onCancel: (() -> Void)?
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var isHotkeyPressed = false
 
-    // 預設快捷鍵：右側 Command（keyCode 54）
-    var targetKeyCode: UInt16 = 54  // Right Command
+    /// 目前使用的啟動鍵
+    var activationKey: ActivationKey = .rightCommand
 
     private init() {}
 
@@ -25,7 +26,7 @@ final class HotkeyManager {
             return false
         }
 
-        // 監聽修飾鍵變化（右側 Command 屬於修飾鍵）
+        // 監聽修飾鍵變化
         let eventMask: CGEventMask = (1 << CGEventType.flagsChanged.rawValue)
 
         guard let tap = CGEvent.tapCreate(
@@ -73,30 +74,43 @@ final class HotkeyManager {
             return Unmanaged.passRetained(event)
         }
 
-        // 修飾鍵按下/放開透過 flagsChanged 偵測
         guard type == .flagsChanged else {
             return Unmanaged.passRetained(event)
         }
 
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+        let flags = event.flags
 
-        // 檢查是否為目標修飾鍵（右側 Command = 54）
-        guard keyCode == targetKeyCode else {
+        // 錄音中偵測其他修飾鍵按下 → 取消
+        if isHotkeyPressed {
+            let isOtherModifier = keyCode != activationKey.rawValue
+            if isOtherModifier {
+                for mask in activationKey.cancelMasks {
+                    if flags.contains(mask) {
+                        isHotkeyPressed = false
+                        DispatchQueue.main.async { [weak self] in
+                            self?.onCancel?()
+                        }
+                        return nil
+                    }
+                }
+            }
+        }
+
+        // 檢查是否為目標啟動鍵
+        guard keyCode == activationKey.rawValue else {
             return Unmanaged.passRetained(event)
         }
 
-        let flags = event.flags
-        let isCommandPressed = flags.contains(.maskCommand)
+        let isTargetPressed = flags.contains(activationKey.flagMask)
 
-        if isCommandPressed && !isHotkeyPressed {
-            // 右側 Command 按下
+        if isTargetPressed && !isHotkeyPressed {
             isHotkeyPressed = true
             DispatchQueue.main.async { [weak self] in
                 self?.onKeyDown?()
             }
-            return nil  // 吞掉事件
-        } else if !isCommandPressed && isHotkeyPressed {
-            // 右側 Command 放開
+            return nil
+        } else if !isTargetPressed && isHotkeyPressed {
             isHotkeyPressed = false
             DispatchQueue.main.async { [weak self] in
                 self?.onKeyUp?()
@@ -119,10 +133,10 @@ final class HotkeyManager {
     }
 
     /// 更新快捷鍵設定
-    func updateHotkey(keyCode: UInt16) {
+    func updateHotkey(key: ActivationKey) {
         let wasRunning = eventTap != nil
         if wasRunning { stop() }
-        targetKeyCode = keyCode
+        activationKey = key
         if wasRunning { _ = start() }
     }
 }

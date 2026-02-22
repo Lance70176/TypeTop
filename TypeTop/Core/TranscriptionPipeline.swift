@@ -30,10 +30,36 @@ final class TranscriptionPipeline {
         hotkeyManager.onKeyUp = { [weak self] in
             self?.stopRecordingAndTranscribe()
         }
+
+        hotkeyManager.onCancel = { [weak self] in
+            self?.cancelRecording()
+        }
+    }
+
+    /// 取消目前錄音
+    func cancelRecording() {
+        guard state == .recording else { return }
+
+        _ = audioRecorder.stopRecording() // 丟棄音訊
+        state = .cancelled
+
+        if settingsStore.settings.playSoundEffects {
+            NSSound(named: .init("Funk"))?.play()
+        }
+
+        // 自動回到閒置狀態
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            if case .cancelled = self.state {
+                self.state = .idle
+            }
+        }
     }
 
     /// 啟動全域快捷鍵監聽（若權限尚未授權，會自動每 2 秒重試）
     func activate() {
+        // 同步啟動鍵設定
+        hotkeyManager.activationKey = settingsStore.settings.activationKey
         if hotkeyManager.start() {
             // 成功啟動，清除重試計時器
             activationTimer?.invalidate()

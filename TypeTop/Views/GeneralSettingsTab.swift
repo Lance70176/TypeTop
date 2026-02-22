@@ -5,7 +5,6 @@ import ServiceManagement
 struct GeneralSettingsTab: View {
     private var settingsStore = SettingsStore.shared
 
-    @State private var hotkeyDisplay: String = "右側 ⌘"
     @State private var accessibilityGranted: Bool = false
     @State private var micPermissionGranted: Bool = false
     @State private var permissionTimer: Timer?
@@ -13,15 +12,13 @@ struct GeneralSettingsTab: View {
     var body: some View {
         Form {
             Section("快捷鍵") {
-                HStack {
-                    Text("按住說話快捷鍵")
-                    Spacer()
-                    Text(hotkeyDisplay)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    // TODO: 未來可加入快捷鍵錄製功能
+                Picker("按住說話快捷鍵", selection: Bindable(settingsStore).settings.activationKey) {
+                    ForEach(ActivationKey.allCases) { key in
+                        Text(key.displayName).tag(key)
+                    }
+                }
+                .onChange(of: settingsStore.settings.activationKey) { _, newValue in
+                    HotkeyManager.shared.updateHotkey(key: newValue)
                 }
             }
 
