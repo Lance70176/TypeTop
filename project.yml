@@ -14,6 +14,16 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     PRODUCT_BUNDLE_IDENTIFIER: com.typetop.app
 
+schemes:
+  TypeTop:
+    build:
+      targets:
+        TypeTop: all
+      preActions:
+        - script: tccutil reset Accessibility com.typetop.app
+          name: Reset Accessibility Permission
+          settingsTarget: TypeTop
+
 targets:
   TypeTop:
     type: application
