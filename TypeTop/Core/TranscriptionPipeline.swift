@@ -41,6 +41,11 @@ final class TranscriptionPipeline {
         guard state == .recording else { return }
         AppDelegate.shared.updateStatusIcon(isRecording: false)
 
+        // 恢復系統音訊
+        if settingsStore.settings.muteSystemAudioWhileRecording {
+            SystemAudioManager.restoreSystemAudio()
+        }
+
         _ = audioRecorder.stopRecording() // 丟棄音訊
         state = .cancelled
 
@@ -109,6 +114,11 @@ final class TranscriptionPipeline {
         }
 
         do {
+            // 錄音時自動靜音系統音訊
+            if settingsStore.settings.muteSystemAudioWhileRecording {
+                SystemAudioManager.muteSystemAudio()
+            }
+
             try audioRecorder.startRecording()
             state = .recording
             AppDelegate.shared.updateStatusIcon(isRecording: true)
@@ -125,6 +135,11 @@ final class TranscriptionPipeline {
     func stopRecordingAndTranscribe() {
         guard state == .recording else { return }
         AppDelegate.shared.updateStatusIcon(isRecording: false)
+
+        // 恢復系統音訊
+        if settingsStore.settings.muteSystemAudioWhileRecording {
+            SystemAudioManager.restoreSystemAudio()
+        }
 
         guard let audioData = audioRecorder.stopRecording() else {
             state = .idle

@@ -70,6 +70,9 @@ struct AppSettings: Codable {
     /// 是否播放音效
     var playSoundEffects: Bool = true
 
+    /// 錄音時自動靜音系統音訊
+    var muteSystemAudioWhileRecording: Bool = false
+
     /// Whisper prompt 模板
     var whisperPrompt: String = "繁體中文語音輸入，可能包含英文單字如 API、iPhone、React、TypeScript、macOS 等技術術語。"
 
@@ -98,7 +101,7 @@ struct AppSettings: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case activeProvider, primaryLanguage, mixedLanguageMode, autoSpaceBetweenCJKAndLatin
-        case punctuationStyle, activationKey, launchAtLogin, playSoundEffects
+        case punctuationStyle, activationKey, launchAtLogin, playSoundEffects, muteSystemAudioWhileRecording
         case whisperPrompt, autoSendDelay, enableLLMPostProcessing, llmProvider
         case llmCorrectionLevel, llmSystemPrompt, customLLMBaseURL, customLLMModel
         // 舊 key，僅用於向後相容解碼
@@ -123,6 +126,7 @@ struct AppSettings: Codable {
         }
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         playSoundEffects = try container.decodeIfPresent(Bool.self, forKey: .playSoundEffects) ?? true
+        muteSystemAudioWhileRecording = try container.decodeIfPresent(Bool.self, forKey: .muteSystemAudioWhileRecording) ?? false
         whisperPrompt = try container.decodeIfPresent(String.self, forKey: .whisperPrompt) ?? "繁體中文語音輸入，可能包含英文單字如 API、iPhone、React、TypeScript、macOS 等技術術語。"
         autoSendDelay = try container.decodeIfPresent(Double.self, forKey: .autoSendDelay) ?? 0.3
         enableLLMPostProcessing = try container.decodeIfPresent(Bool.self, forKey: .enableLLMPostProcessing) ?? true
@@ -153,6 +157,7 @@ struct AppSettings: Codable {
         try container.encode(activationKey, forKey: .activationKey)
         try container.encode(launchAtLogin, forKey: .launchAtLogin)
         try container.encode(playSoundEffects, forKey: .playSoundEffects)
+        try container.encode(muteSystemAudioWhileRecording, forKey: .muteSystemAudioWhileRecording)
         try container.encode(whisperPrompt, forKey: .whisperPrompt)
         try container.encode(autoSendDelay, forKey: .autoSendDelay)
         try container.encode(enableLLMPostProcessing, forKey: .enableLLMPostProcessing)

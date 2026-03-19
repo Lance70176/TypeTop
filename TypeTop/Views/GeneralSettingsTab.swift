@@ -69,6 +69,8 @@ struct GeneralSettingsTab: View {
             Section("行為") {
                 Toggle("播放音效提示", isOn: Bindable(settingsStore).settings.playSoundEffects)
 
+                Toggle("錄音時靜音系統音訊", isOn: Bindable(settingsStore).settings.muteSystemAudioWhileRecording)
+
                 Toggle("開機自動啟動", isOn: Bindable(settingsStore).settings.launchAtLogin)
                     .onChange(of: settingsStore.settings.launchAtLogin) { _, newValue in
                         setLaunchAtLogin(newValue)
