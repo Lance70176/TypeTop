@@ -30,6 +30,7 @@
 		A6EFB7A20C7A97BFE7CB1933 /* TypeTopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10280366663386C59835E78E /* TypeTopApp.swift */; };
 		A8823762573F6B4F5ABC4E91 /* TextPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD92CAFFB3CE34C5B16DA5F /* TextPostProcessor.swift */; };
 		B8E39DEFCA214E401C433519 /* TranscriptionPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961ED5C1C25A79F4AD7E7E5 /* TranscriptionPipeline.swift */; };
+		C1B972C4EC9DA1D9C83B7974 /* AppleFoundationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E07E49433BFF5177B0984A /* AppleFoundationModel.swift */; };
 		C5C870C1707840DA761269F1 /* OpenAIWhisperService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AE9FEBD23708E84D8AFF84 /* OpenAIWhisperService.swift */; };
 		CE755BBCC328EFF126B0D5E1 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7DA05EB04594B1A6A57B92 /* SettingsStore.swift */; };
 		E028980EAC55546B940A9A54 /* STTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C39BFD43BCE16C77F5DBEF /* STTService.swift */; };
@@ -68,6 +69,7 @@
 		A4998E77D6D3FCD4DEF17262 /* TypeTop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TypeTop.entitlements; sourceTree = "<group>"; };
 		AD5B8EAAEF15345275DB89D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADD92CAFFB3CE34C5B16DA5F /* TextPostProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPostProcessor.swift; sourceTree = "<group>"; };
+		B8E07E49433BFF5177B0984A /* AppleFoundationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationModel.swift; sourceTree = "<group>"; };
 		D60C9E19B347A7675EE46166 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D782C1D0884199334A306256 /* LanguageSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSettingsTab.swift; sourceTree = "<group>"; };
 		E6E5585B43884A45352E39F9 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 		E3E00A5DEA7A4CCAC0074D36 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B8E07E49433BFF5177B0984A /* AppleFoundationModel.swift */,
 				087FEA0F69AC8B2D65D9417C /* GroqWhisperService.swift */,
 				F3FF8952A7160B311E88DB41 /* LLMPostProcessor.swift */,
 				62AE9FEBD23708E84D8AFF84 /* OpenAIWhisperService.swift */,
@@ -258,6 +261,7 @@
 				F37EA5974BBB88EC470F6EA2 /* APISettingsTab.swift in Sources */,
 				50BE437033887DB6907EA6EE /* AppDelegate.swift in Sources */,
 				2E92EBDC4E57BA120953E9C9 /* AppSettings.swift in Sources */,
+				C1B972C4EC9DA1D9C83B7974 /* AppleFoundationModel.swift in Sources */,
 				EBCEFC09489A9C439573ADCC /* AudioRecorder.swift in Sources */,
 				4CD38AA420D2A8056F64E11F /* CustomVocabulary.swift in Sources */,
 				3C4C37A6118AA22009B40895 /* GeneralSettingsTab.swift in Sources */,

@@ -80,6 +80,21 @@ struct APISettingsTab: View {
                         .foregroundStyle(.secondary)
                 }
 
+                // Apple 本機模型可用性狀態
+                if selectedLLM == .apple {
+                    HStack {
+                        Text("狀態")
+                        Spacer()
+                        if let reason = AppleFoundationModel.unavailableReason {
+                            Text(reason)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Text("可用")
+                                .foregroundStyle(.green)
+                        }
+                    }
+                }
+
                 // 說明文字
                 VStack(alignment: .leading, spacing: 4) {
                     Text(selectedLLM.helpText)
@@ -296,6 +311,21 @@ struct APISettingsTab: View {
         Task {
             do {
                 let provider = settingsStore.settings.llmProvider
+
+                // Apple 本機模型不走 HTTP，直接呼叫 FoundationModels
+                if provider == .apple {
+                    if #available(macOS 26.0, *), AppleFoundationModel.isAvailable {
+                        let response = try await AppleFoundationModel.process(
+                            "測試", systemPrompt: "回覆「OK」即可。", temperature: 0
+                        )
+                        testResult = (true, "Apple 本機模型可用！（回應：\(response)）")
+                    } else {
+                        testResult = (false, "Apple 本機模型：\(AppleFoundationModel.unavailableReason ?? "無法使用")")
+                    }
+                    testingLLM = false
+                    return
+                }
+
                 let apiKey = settingsStore.llmApiKey(for: provider) ?? ""
                 let url = settingsStore.llmURL(for: provider)
                 let model = settingsStore.llmModel(for: provider)

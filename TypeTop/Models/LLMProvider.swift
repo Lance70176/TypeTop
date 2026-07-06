@@ -7,6 +7,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
     case deepseek = "deepseek"
     case moonshot = "moonshot"
     case gemini = "gemini"
+    case apple = "apple"
     case ollama = "ollama"
     case custom = "custom"
 
@@ -19,6 +20,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "DeepSeek"
         case .moonshot: return "Moonshot (Kimi)"
         case .gemini: return "Google Gemini"
+        case .apple: return "Apple 本機模型"
         case .ollama: return "Ollama (本地)"
         case .custom: return "自訂"
         }
@@ -31,6 +33,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "https://api.deepseek.com/chat/completions"
         case .moonshot: return "https://api.moonshot.ai/v1/chat/completions"
         case .gemini: return "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        case .apple: return "" // 使用 FoundationModels framework，不走 HTTP
         case .ollama: return "http://localhost:11434/v1/chat/completions"
         case .custom: return "" // 由 AppSettings.customLLMBaseURL 提供
         }
@@ -43,6 +46,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "deepseek-chat"
         case .moonshot: return "kimi-k2.5"
         case .gemini: return "gemini-3.1-flash-lite"
+        case .apple: return "系統內建模型（on-device）"
         case .ollama: return "llama3"
         case .custom: return "" // 由 AppSettings.customLLMModel 提供
         }
@@ -55,6 +59,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "sk-..."
         case .moonshot: return "sk-..."
         case .gemini: return "AIza..."
+        case .apple: return ""
         case .ollama: return ""
         case .custom: return "API Key（若需要）"
         }
@@ -62,7 +67,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
 
     /// 是否需要 API Key
     var requiresAPIKey: Bool {
-        self != .ollama
+        self != .ollama && self != .apple
     }
 
     var helpURL: String? {
@@ -72,6 +77,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "https://platform.deepseek.com/api_keys"
         case .moonshot: return "https://platform.moonshot.ai/console/api-keys"
         case .gemini: return "https://aistudio.google.com/apikey"
+        case .apple: return "https://support.apple.com/zh-tw/121115"
         case .ollama: return "https://ollama.com"
         case .custom: return nil
         }
@@ -89,6 +95,8 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
             return "前往 platform.moonshot.ai → API Keys。Moonshot (Kimi) 支援中文語境最佳化。"
         case .gemini:
             return "前往 aistudio.google.com → Get API Key。Gemini 提供免費額度。"
+        case .apple:
+            return "使用 macOS 26 內建的 Apple Intelligence 本機模型（約 3B）。免費、離線可用、內容不離開這台電腦。需 Apple Silicon 並在「系統設定」開啟 Apple Intelligence。"
         case .ollama:
             return "請確保 Ollama 已在本機執行（預設 http://localhost:11434）。不需要 API Key。"
         case .custom:

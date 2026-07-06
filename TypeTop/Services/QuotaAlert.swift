@@ -25,6 +25,7 @@ enum QuotaAlert {
         // 尋找已設定 API Key（或不需 Key）的替代供應商
         let candidate = LLMProvider.allCases.first { provider in
             provider != current && provider != .custom &&
+            (provider != .apple || AppleFoundationModel.isAvailable) &&
             (!provider.requiresAPIKey || !(settingsStore.llmApiKey(for: provider) ?? "").isEmpty)
         }
 
