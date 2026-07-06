@@ -35,8 +35,13 @@ struct VocabularyLibrary: Codable {
         }
     }
 
-    /// 取得所有啟用的替換規則
+    /// 取得所有啟用的替換規則（排除 source == target 的常用詞，替換無意義）
     var activeRules: [(source: String, target: String)] {
-        entries.filter(\.isEnabled).map { ($0.source, $0.target) }
+        entries.filter { $0.isEnabled && $0.source != $0.target }.map { ($0.source, $0.target) }
+    }
+
+    /// 啟用中的常用詞（source == target），作為 LLM 修正時的同音字提示
+    var hintWords: [String] {
+        entries.filter { $0.isEnabled && $0.source == $0.target }.map(\.target)
     }
 }

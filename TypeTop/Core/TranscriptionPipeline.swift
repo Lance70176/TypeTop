@@ -188,11 +188,17 @@ final class TranscriptionPipeline {
                 let llmURL = settingsStore.llmURL(for: llmProvider)
                 let llmModel = settingsStore.llmModel(for: llmProvider)
                 // logger.notice("[TypeTop] LLM 後處理啟用，使用 \(llmProvider.displayName, privacy: .public) / \(llmModel, privacy: .public)")
+                // 附加常用詞提示，協助 LLM 在同音字之間選對詞
+                var systemPrompt = settings.llmSystemPrompt
+                let hintWords = VocabularyStore.shared.library.hintWords
+                if !hintWords.isEmpty {
+                    systemPrompt += "\n\n使用者常用詞彙（遇同音或發音相近的字詞時，優先採用以下寫法）：\n" + hintWords.joined(separator: "、")
+                }
                 let llm = LLMPostProcessor(
                     url: llmURL,
                     model: llmModel,
                     apiKey: llmApiKey,
-                    systemPrompt: settings.llmSystemPrompt,
+                    systemPrompt: systemPrompt,
                     temperature: settings.llmTemperature
                 )
                 do {
