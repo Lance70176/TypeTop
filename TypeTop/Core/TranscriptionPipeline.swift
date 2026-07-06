@@ -192,7 +192,8 @@ final class TranscriptionPipeline {
                     url: llmURL,
                     model: llmModel,
                     apiKey: llmApiKey,
-                    systemPrompt: settings.llmSystemPrompt
+                    systemPrompt: settings.llmSystemPrompt,
+                    temperature: settings.llmTemperature
                 )
                 do {
                     result.processedText = try await llm.process(result.rawText)

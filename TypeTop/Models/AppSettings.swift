@@ -91,6 +91,9 @@ struct AppSettings: Codable {
     /// LLM 後處理系統提示詞
     var llmSystemPrompt: String = LLMCorrectionLevel.medium.defaultPrompt
 
+    /// LLM 取樣溫度（0 = 最穩定，越高越隨機；修正任務建議 0~0.3）
+    var llmTemperature: Double = 0.3
+
     /// 自訂 LLM Base URL（僅 llmProvider == .custom 時使用）
     var customLLMBaseURL: String = ""
 
@@ -103,7 +106,7 @@ struct AppSettings: Codable {
         case activeProvider, primaryLanguage, mixedLanguageMode, autoSpaceBetweenCJKAndLatin
         case punctuationStyle, activationKey, launchAtLogin, playSoundEffects, muteSystemAudioWhileRecording
         case whisperPrompt, autoSendDelay, enableLLMPostProcessing, llmProvider
-        case llmCorrectionLevel, llmSystemPrompt, customLLMBaseURL, customLLMModel
+        case llmCorrectionLevel, llmSystemPrompt, llmTemperature, customLLMBaseURL, customLLMModel
         // 舊 key，僅用於向後相容解碼
         case hotkeyKeyCode
     }
@@ -143,6 +146,7 @@ struct AppSettings: Codable {
         }
         llmCorrectionLevel = try container.decodeIfPresent(LLMCorrectionLevel.self, forKey: .llmCorrectionLevel) ?? .medium
         llmSystemPrompt = try container.decodeIfPresent(String.self, forKey: .llmSystemPrompt) ?? llmCorrectionLevel.defaultPrompt
+        llmTemperature = try container.decodeIfPresent(Double.self, forKey: .llmTemperature) ?? 0.3
         customLLMBaseURL = try container.decodeIfPresent(String.self, forKey: .customLLMBaseURL) ?? ""
         customLLMModel = try container.decodeIfPresent(String.self, forKey: .customLLMModel) ?? ""
     }
@@ -164,6 +168,7 @@ struct AppSettings: Codable {
         try container.encode(llmProvider, forKey: .llmProvider)
         try container.encode(llmCorrectionLevel, forKey: .llmCorrectionLevel)
         try container.encode(llmSystemPrompt, forKey: .llmSystemPrompt)
+        try container.encode(llmTemperature, forKey: .llmTemperature)
         try container.encode(customLLMBaseURL, forKey: .customLLMBaseURL)
         try container.encode(customLLMModel, forKey: .customLLMModel)
     }

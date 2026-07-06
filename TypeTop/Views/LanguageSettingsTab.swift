@@ -82,6 +82,19 @@ struct LanguageSettingsTab: View {
                 Text("語音辨識（STT）和語意修正（LLM）可使用不同供應商。例如 Groq 做語音轉文字、OpenAI GPT 做智慧修正。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                HStack {
+                    Text("取樣溫度")
+                    Slider(value: Bindable(settingsStore).settings.llmTemperature, in: 0...1, step: 0.1)
+                    Text(String(format: "%.1f", settingsStore.settings.llmTemperature))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .frame(width: 28, alignment: .trailing)
+                }
+
+                Text("溫度越低輸出越穩定，越高越有變化。錯字修正建議 0~0.3。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("LLM 系統提示詞") {

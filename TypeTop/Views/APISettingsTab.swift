@@ -269,7 +269,8 @@ struct APISettingsTab: View {
                     url: url,
                     model: model,
                     apiKey: apiKey,
-                    systemPrompt: "回覆「OK」即可。"
+                    systemPrompt: "回覆「OK」即可。",
+                    temperature: settingsStore.settings.llmTemperature
                 )
                 let response = try await llm.process("測試")
                 testResult = (true, "\(provider.displayName) LLM 連線成功！（回應：\(response)）")

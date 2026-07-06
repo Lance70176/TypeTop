@@ -7,12 +7,14 @@ struct LLMPostProcessor {
     private let model: String
     private let apiKey: String
     private let systemPrompt: String
+    private let temperature: Double
 
-    init(url: String, model: String, apiKey: String, systemPrompt: String) {
+    init(url: String, model: String, apiKey: String, systemPrompt: String, temperature: Double = 0.3) {
         self.url = url
         self.model = model
         self.apiKey = apiKey
         self.systemPrompt = systemPrompt
+        self.temperature = temperature
     }
 
     /// 使用 LLM 修正辨識文字
@@ -38,7 +40,7 @@ struct LLMPostProcessor {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": text]
             ],
-            "temperature": 0.7,
+            "temperature": temperature,
             "max_tokens": 2048
         ]
 
