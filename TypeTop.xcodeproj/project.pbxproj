@@ -21,6 +21,7 @@
 		50BE437033887DB6907EA6EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60C9E19B347A7675EE46166 /* AppDelegate.swift */; };
 		57F3D4A59905CCADA4F0E416 /* TranscriptionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8980C3AB6B3972D666EA79 /* TranscriptionResult.swift */; };
 		617BCF6E529529062937D98B /* default_vocabulary.json in Resources */ = {isa = PBXBuildFile; fileRef = 65F338A2AC5288523DA166CF /* default_vocabulary.json */; };
+		721555EB37DD507A4F30A13A /* UsageTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E713C4ABCC6E2C437E5B4D5 /* UsageTracker.swift */; };
 		73ED09E8FF363BE6A1C87CF0 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E5585B43884A45352E39F9 /* HotkeyManager.swift */; };
 		7C4B6B8B19FEE87C025F09D5 /* LLMPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF8952A7160B311E88DB41 /* LLMPostProcessor.swift */; };
 		861FE7AFF6487839792816AD /* TextInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986F7EB193FE500B43987B2 /* TextInjector.swift */; };
@@ -34,6 +35,7 @@
 		E028980EAC55546B940A9A54 /* STTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C39BFD43BCE16C77F5DBEF /* STTService.swift */; };
 		E7C5AE8B3FDB8CA084601951 /* RecordingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3395E99B6B4D775DCC09EF62 /* RecordingOverlay.swift */; };
 		EBCEFC09489A9C439573ADCC /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8197281A874A01D53A4F4ACB /* AudioRecorder.swift */; };
+		EE06B40A42C6F003B6FF3C26 /* QuotaAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AC3C5C1ED52A7FE1D7D89DF /* QuotaAlert.swift */; };
 		F377CC45A58FF603D861D0F6 /* VocabularyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F5F80E977018AA9A533114 /* VocabularyStore.swift */; };
 		F37EA5974BBB88EC470F6EA2 /* APISettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EBA98EA922DA038B6C822C /* APISettingsTab.swift */; };
 /* End PBXBuildFile section */
@@ -44,6 +46,7 @@
 		10280366663386C59835E78E /* TypeTopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeTopApp.swift; sourceTree = "<group>"; };
 		20777EE4476F298CF9B1DAA2 /* SystemAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemAudioManager.swift; sourceTree = "<group>"; };
 		298825126E79C8F338EAFD2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2AC3C5C1ED52A7FE1D7D89DF /* QuotaAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotaAlert.swift; sourceTree = "<group>"; };
 		2E78956A6CFBD494C8365002 /* CustomVocabulary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomVocabulary.swift; sourceTree = "<group>"; };
 		3395E99B6B4D775DCC09EF62 /* RecordingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlay.swift; sourceTree = "<group>"; };
 		3E81559FCFCB491C59E7C6F5 /* VocabularyTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyTab.swift; sourceTree = "<group>"; };
@@ -58,6 +61,7 @@
 		7E139C40226E381CD11051CB /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		8197281A874A01D53A4F4ACB /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		8C8980C3AB6B3972D666EA79 /* TranscriptionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionResult.swift; sourceTree = "<group>"; };
+		8E713C4ABCC6E2C437E5B4D5 /* UsageTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageTracker.swift; sourceTree = "<group>"; };
 		99410409C4FABD5D33621EC3 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		9F18A3F07FF2213F8CAD9250 /* TypeTop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TypeTop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1CD1F73531C68785CF583F7 /* APIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIProvider.swift; sourceTree = "<group>"; };
@@ -79,6 +83,7 @@
 			children = (
 				08E29E751410065B5D69A170 /* KeychainHelper.swift */,
 				FF7DA05EB04594B1A6A57B92 /* SettingsStore.swift */,
+				8E713C4ABCC6E2C437E5B4D5 /* UsageTracker.swift */,
 				61F5F80E977018AA9A533114 /* VocabularyStore.swift */,
 			);
 			path = Storage;
@@ -170,6 +175,7 @@
 				087FEA0F69AC8B2D65D9417C /* GroqWhisperService.swift */,
 				F3FF8952A7160B311E88DB41 /* LLMPostProcessor.swift */,
 				62AE9FEBD23708E84D8AFF84 /* OpenAIWhisperService.swift */,
+				2AC3C5C1ED52A7FE1D7D89DF /* QuotaAlert.swift */,
 				70C39BFD43BCE16C77F5DBEF /* STTService.swift */,
 				ADD92CAFFB3CE34C5B16DA5F /* TextPostProcessor.swift */,
 			);
@@ -263,6 +269,7 @@
 				4F1E7FBEEEDFD415B644C67B /* LanguageSettingsTab.swift in Sources */,
 				36B52A19E172C1F5A6D78141 /* MenuBarView.swift in Sources */,
 				C5C870C1707840DA761269F1 /* OpenAIWhisperService.swift in Sources */,
+				EE06B40A42C6F003B6FF3C26 /* QuotaAlert.swift in Sources */,
 				E7C5AE8B3FDB8CA084601951 /* RecordingOverlay.swift in Sources */,
 				E028980EAC55546B940A9A54 /* STTService.swift in Sources */,
 				CE755BBCC328EFF126B0D5E1 /* SettingsStore.swift in Sources */,
@@ -273,6 +280,7 @@
 				B8E39DEFCA214E401C433519 /* TranscriptionPipeline.swift in Sources */,
 				57F3D4A59905CCADA4F0E416 /* TranscriptionResult.swift in Sources */,
 				A6EFB7A20C7A97BFE7CB1933 /* TypeTopApp.swift in Sources */,
+				721555EB37DD507A4F30A13A /* UsageTracker.swift in Sources */,
 				F377CC45A58FF603D861D0F6 /* VocabularyStore.swift in Sources */,
 				964E83964787F26236F8974C /* VocabularyTab.swift in Sources */,
 			);

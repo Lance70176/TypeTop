@@ -168,9 +168,9 @@ final class TranscriptionPipeline {
 
     private func transcribeAndInject(audioData: Data) async {
         do {
-            // 1. 呼叫 API 辨識
-            let service = STTServiceFactory.create(for: .groq)
+            // 1. 呼叫 API 辨識（使用設定中的 STT 供應商）
             let settings = settingsStore.settings
+            let service = STTServiceFactory.create(for: settings.activeProvider)
 
             var result = try await service.transcribe(
                 audioData: audioData,
@@ -199,11 +199,15 @@ final class TranscriptionPipeline {
                     model: llmModel,
                     apiKey: llmApiKey,
                     systemPrompt: systemPrompt,
-                    temperature: settings.llmTemperature
+                    temperature: settings.llmTemperature,
+                    usageKey: "llm.\(llmProvider.rawValue)"
                 )
                 do {
                     result.processedText = try await llm.process(result.rawText)
                     // logger.notice("[TypeTop] LLM 修正結果: \(result.processedText, privacy: .public)")
+                } catch LLMError.rateLimited {
+                    // LLM 額度用罄：跳出切換詢問，本次直接使用原始辨識結果
+                    await MainActor.run { QuotaAlert.llmQuotaExceeded() }
                 } catch {
                     // logger.notice("[TypeTop] LLM 後處理失敗: \(error, privacy: .public)")
                 }
@@ -230,6 +234,9 @@ final class TranscriptionPipeline {
                 state = .idle
             }
         } catch {
+            if case STTError.rateLimited = error {
+                await MainActor.run { QuotaAlert.sttQuotaExceeded() }
+            }
             state = .error(error.localizedDescription)
             errorMessage = error.localizedDescription
 

@@ -54,10 +54,16 @@ struct OpenAIWhisperService: STTService {
             throw STTError.invalidResponse
         }
 
+        guard httpResponse.statusCode != 429 else {
+            throw STTError.rateLimited
+        }
+
         guard httpResponse.statusCode == 200 else {
             let errorMsg = String(data: data, encoding: .utf8) ?? "未知錯誤"
             throw STTError.apiError("HTTP \(httpResponse.statusCode): \(errorMsg)")
         }
+
+        UsageTracker.shared.record("stt.openai")
 
         let duration = Date().timeIntervalSince(startTime)
 

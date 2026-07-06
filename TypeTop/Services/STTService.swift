@@ -18,6 +18,7 @@ enum STTError: LocalizedError {
     case apiError(String)
     case networkError(Error)
     case emptyAudio
+    case rateLimited
 
     var errorDescription: String? {
         switch self {
@@ -26,6 +27,7 @@ enum STTError: LocalizedError {
         case .apiError(let msg): return "API 錯誤：\(msg)"
         case .networkError(let err): return "網路錯誤：\(err.localizedDescription)"
         case .emptyAudio: return "音訊資料為空"
+        case .rateLimited: return "已達 API 用量上限（HTTP 429）"
         }
     }
 }

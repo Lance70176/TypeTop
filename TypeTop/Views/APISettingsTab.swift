@@ -3,6 +3,7 @@ import SwiftUI
 /// API Key 管理設定頁面
 struct APISettingsTab: View {
     private var settingsStore = SettingsStore.shared
+    private var usageTracker = UsageTracker.shared
 
     // STT
     @State private var groqKey: String = ""
@@ -106,6 +107,40 @@ struct APISettingsTab: View {
                             .controlSize(.small)
                     }
                 }
+            }
+
+            // MARK: - 今日用量
+            Section("今日用量（本地統計）") {
+                HStack {
+                    Text("語音辨識（\(settingsStore.settings.activeProvider.displayName)）")
+                    Spacer()
+                    Text("\(usageTracker.todayRequests("stt.\(settingsStore.settings.activeProvider.rawValue)")) 次")
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("語意修正（\(selectedLLM.displayName)）")
+                    Spacer()
+                    let usageKey = "llm.\(selectedLLM.rawValue)"
+                    Text("\(usageTracker.todayRequests(usageKey)) 次 / \(usageTracker.todayTokens(usageKey)) tokens")
+                        .foregroundStyle(.secondary)
+                }
+
+                // Groq 回應 headers 提供的即時剩餘額度
+                ForEach(["stt", "llm"], id: \.self) { kind in
+                    if let limit = usageTracker.groqLimits[kind],
+                       let remaining = limit.remainingRequests {
+                        HStack {
+                            Text("Groq \(kind == "stt" ? "語音辨識" : "語意修正")剩餘額度")
+                            Spacer()
+                            Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
+                                .foregroundStyle(remaining < 50 ? .orange : .secondary)
+                        }
+                    }
+                }
+
+                Text("次數與 tokens 為本 app 的本地統計；Groq 剩餘額度來自官方回應。其他供應商的官方額度請至各家控制台查看（Gemini：aistudio.google.com/rate-limit）。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if let result = testResult {
