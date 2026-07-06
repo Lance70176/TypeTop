@@ -42,7 +42,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .groq: return "llama-3.3-70b-versatile"
         case .deepseek: return "deepseek-chat"
         case .moonshot: return "kimi-k2.5"
-        case .gemini: return "gemini-2.0-flash"
+        case .gemini: return "gemini-3.1-flash-lite"
         case .ollama: return "llama3"
         case .custom: return "" // 由 AppSettings.customLLMModel 提供
         }
