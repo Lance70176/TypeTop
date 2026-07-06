@@ -11,7 +11,10 @@ settings:
     SWIFT_VERSION: "5.10"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     ENABLE_HARDENED_RUNTIME: true
-    CODE_SIGN_IDENTITY: "-"
+    # 使用固定的開發憑證簽章，讓 TCC 權限（麥克風/輔助使用）在重新編譯後仍有效
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "Apple Development"
+    DEVELOPMENT_TEAM: V7YS73GCG4
     PRODUCT_BUNDLE_IDENTIFIER: com.typetop.app
 
 schemes:
@@ -19,10 +22,6 @@ schemes:
     build:
       targets:
         TypeTop: all
-      preActions:
-        - script: tccutil reset Accessibility com.typetop.app
-          name: Reset Accessibility Permission
-          settingsTarget: TypeTop
 
 targets:
   TypeTop:

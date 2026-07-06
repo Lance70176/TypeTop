@@ -25,6 +25,7 @@
 		7C4B6B8B19FEE87C025F09D5 /* LLMPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF8952A7160B311E88DB41 /* LLMPostProcessor.swift */; };
 		861FE7AFF6487839792816AD /* TextInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986F7EB193FE500B43987B2 /* TextInjector.swift */; };
 		964E83964787F26236F8974C /* VocabularyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E81559FCFCB491C59E7C6F5 /* VocabularyTab.swift */; };
+		9EA18B315CE62D08AD0DA2DC /* SystemAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20777EE4476F298CF9B1DAA2 /* SystemAudioManager.swift */; };
 		A6EFB7A20C7A97BFE7CB1933 /* TypeTopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10280366663386C59835E78E /* TypeTopApp.swift */; };
 		A8823762573F6B4F5ABC4E91 /* TextPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD92CAFFB3CE34C5B16DA5F /* TextPostProcessor.swift */; };
 		B8E39DEFCA214E401C433519 /* TranscriptionPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7961ED5C1C25A79F4AD7E7E5 /* TranscriptionPipeline.swift */; };
@@ -33,7 +34,6 @@
 		E028980EAC55546B940A9A54 /* STTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C39BFD43BCE16C77F5DBEF /* STTService.swift */; };
 		E7C5AE8B3FDB8CA084601951 /* RecordingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3395E99B6B4D775DCC09EF62 /* RecordingOverlay.swift */; };
 		EBCEFC09489A9C439573ADCC /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8197281A874A01D53A4F4ACB /* AudioRecorder.swift */; };
-		EC1A2B3C4D5E6F7890AB1234 /* SystemAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A2B3C4D5E6F7890AB5678 /* SystemAudioManager.swift */; };
 		F377CC45A58FF603D861D0F6 /* VocabularyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F5F80E977018AA9A533114 /* VocabularyStore.swift */; };
 		F37EA5974BBB88EC470F6EA2 /* APISettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EBA98EA922DA038B6C822C /* APISettingsTab.swift */; };
 /* End PBXBuildFile section */
@@ -42,6 +42,7 @@
 		087FEA0F69AC8B2D65D9417C /* GroqWhisperService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqWhisperService.swift; sourceTree = "<group>"; };
 		08E29E751410065B5D69A170 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		10280366663386C59835E78E /* TypeTopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeTopApp.swift; sourceTree = "<group>"; };
+		20777EE4476F298CF9B1DAA2 /* SystemAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemAudioManager.swift; sourceTree = "<group>"; };
 		298825126E79C8F338EAFD2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2E78956A6CFBD494C8365002 /* CustomVocabulary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomVocabulary.swift; sourceTree = "<group>"; };
 		3395E99B6B4D775DCC09EF62 /* RecordingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlay.swift; sourceTree = "<group>"; };
@@ -56,7 +57,6 @@
 		7961ED5C1C25A79F4AD7E7E5 /* TranscriptionPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionPipeline.swift; sourceTree = "<group>"; };
 		7E139C40226E381CD11051CB /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		8197281A874A01D53A4F4ACB /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
-		EC1A2B3C4D5E6F7890AB5678 /* SystemAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemAudioManager.swift; sourceTree = "<group>"; };
 		8C8980C3AB6B3972D666EA79 /* TranscriptionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionResult.swift; sourceTree = "<group>"; };
 		99410409C4FABD5D33621EC3 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		9F18A3F07FF2213F8CAD9250 /* TypeTop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TypeTop.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -128,7 +128,7 @@
 			children = (
 				8197281A874A01D53A4F4ACB /* AudioRecorder.swift */,
 				E6E5585B43884A45352E39F9 /* HotkeyManager.swift */,
-				EC1A2B3C4D5E6F7890AB5678 /* SystemAudioManager.swift */,
+				20777EE4476F298CF9B1DAA2 /* SystemAudioManager.swift */,
 				5986F7EB193FE500B43987B2 /* TextInjector.swift */,
 				7961ED5C1C25A79F4AD7E7E5 /* TranscriptionPipeline.swift */,
 			);
@@ -205,6 +205,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					06B40A268EC66E4A643AF911 = {
+						DevelopmentTeam = V7YS73GCG4;
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 4749AD0031525DFC27A50ED8 /* Build configuration list for PBXProject "TypeTop" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -261,7 +267,7 @@
 				E028980EAC55546B940A9A54 /* STTService.swift in Sources */,
 				CE755BBCC328EFF126B0D5E1 /* SettingsStore.swift in Sources */,
 				0BA455DA6BFF8FAD7E411DFB /* SettingsWindow.swift in Sources */,
-				EC1A2B3C4D5E6F7890AB1234 /* SystemAudioManager.swift in Sources */,
+				9EA18B315CE62D08AD0DA2DC /* SystemAudioManager.swift in Sources */,
 				861FE7AFF6487839792816AD /* TextInjector.swift in Sources */,
 				A8823762573F6B4F5ABC4E91 /* TextPostProcessor.swift in Sources */,
 				B8E39DEFCA214E401C433519 /* TranscriptionPipeline.swift in Sources */,
@@ -308,9 +314,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = V7YS73GCG4;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -388,9 +396,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = V7YS73GCG4;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
