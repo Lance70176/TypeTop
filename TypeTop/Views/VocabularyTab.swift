@@ -42,7 +42,8 @@ struct VocabularyTab: View {
                 }
 
                 Menu {
-                    Button("匯出詞彙庫...") { exportVocabulary() }
+                    Button("匯出詞彙庫 (JSON)...") { exportVocabulary() }
+                    Button("匯出注音詞庫 (.txt)...") { exportZhuyinTXT() }
                     Button("匯入詞彙庫...") { importVocabulary() }
                     Divider()
                     Button("重置為預設", role: .destructive) {
@@ -113,15 +114,32 @@ struct VocabularyTab: View {
         }
     }
 
+    private func exportZhuyinTXT() {
+        guard let data = vocabularyStore.exportZhuyinTXT() else { return }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.nameFieldStringValue = "個人詞庫.txt"
+        panel.canCreateDirectories = true
+
+        if panel.runModal() == .OK, let url = panel.url {
+            try? data.write(to: url)
+        }
+    }
+
     private func importVocabulary() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.json]
+        panel.allowedContentTypes = [.json, .plainText]
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
             do {
                 let data = try Data(contentsOf: url)
-                try vocabularyStore.importJSON(data, replace: false)
+                if url.pathExtension.lowercased() == "json" {
+                    try vocabularyStore.importJSON(data, replace: false)
+                } else {
+                    try vocabularyStore.importZhuyinTXT(data)
+                }
             } catch {
                 importError = error.localizedDescription
                 showImportAlert = true
@@ -138,14 +156,20 @@ struct VocabularyRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 8) {
-                    Text(entry.source)
-                        .strikethrough()
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "arrow.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                    Text(entry.target)
-                        .fontWeight(.medium)
+                    if entry.source == entry.target {
+                        // 常用詞（非替換規則）
+                        Text(entry.target)
+                            .fontWeight(.medium)
+                    } else {
+                        Text(entry.source)
+                            .strikethrough()
+                            .foregroundStyle(.secondary)
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text(entry.target)
+                            .fontWeight(.medium)
+                    }
                 }
 
                 if !entry.note.isEmpty {

@@ -3,6 +3,7 @@ import SwiftUI
 /// API Key 管理設定頁面
 struct APISettingsTab: View {
     private var settingsStore = SettingsStore.shared
+    private var usageTracker = UsageTracker.shared
 
     // STT
     @State private var groqKey: String = ""
@@ -79,6 +80,21 @@ struct APISettingsTab: View {
                         .foregroundStyle(.secondary)
                 }
 
+                // Apple 本機模型可用性狀態
+                if selectedLLM == .apple {
+                    HStack {
+                        Text("狀態")
+                        Spacer()
+                        if let reason = AppleFoundationModel.unavailableReason {
+                            Text(reason)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Text("可用")
+                                .foregroundStyle(.green)
+                        }
+                    }
+                }
+
                 // 說明文字
                 VStack(alignment: .leading, spacing: 4) {
                     Text(selectedLLM.helpText)
@@ -106,6 +122,40 @@ struct APISettingsTab: View {
                             .controlSize(.small)
                     }
                 }
+            }
+
+            // MARK: - 今日用量
+            Section("今日用量（本地統計）") {
+                HStack {
+                    Text("語音辨識（\(settingsStore.settings.activeProvider.displayName)）")
+                    Spacer()
+                    Text("\(usageTracker.todayRequests("stt.\(settingsStore.settings.activeProvider.rawValue)")) 次")
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("語意修正（\(selectedLLM.displayName)）")
+                    Spacer()
+                    let usageKey = "llm.\(selectedLLM.rawValue)"
+                    Text("\(usageTracker.todayRequests(usageKey)) 次 / \(usageTracker.todayTokens(usageKey)) tokens")
+                        .foregroundStyle(.secondary)
+                }
+
+                // Groq 回應 headers 提供的即時剩餘額度
+                ForEach(["stt", "llm"], id: \.self) { kind in
+                    if let limit = usageTracker.groqLimits[kind],
+                       let remaining = limit.remainingRequests {
+                        HStack {
+                            Text("Groq \(kind == "stt" ? "語音辨識" : "語意修正")剩餘額度")
+                            Spacer()
+                            Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
+                                .foregroundStyle(remaining < 50 ? .orange : .secondary)
+                        }
+                    }
+                }
+
+                Text("次數與 tokens 為本 app 的本地統計；Groq 剩餘額度來自官方回應。其他供應商的官方額度請至各家控制台查看（Gemini：aistudio.google.com/rate-limit）。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if let result = testResult {
@@ -261,6 +311,21 @@ struct APISettingsTab: View {
         Task {
             do {
                 let provider = settingsStore.settings.llmProvider
+
+                // Apple 本機模型不走 HTTP，直接呼叫 FoundationModels
+                if provider == .apple {
+                    if #available(macOS 26.0, *), AppleFoundationModel.isAvailable {
+                        let response = try await AppleFoundationModel.process(
+                            "測試", systemPrompt: "回覆「OK」即可。", temperature: 0
+                        )
+                        testResult = (true, "Apple 本機模型可用！（回應：\(response)）")
+                    } else {
+                        testResult = (false, "Apple 本機模型：\(AppleFoundationModel.unavailableReason ?? "無法使用")")
+                    }
+                    testingLLM = false
+                    return
+                }
+
                 let apiKey = settingsStore.llmApiKey(for: provider) ?? ""
                 let url = settingsStore.llmURL(for: provider)
                 let model = settingsStore.llmModel(for: provider)
@@ -269,7 +334,8 @@ struct APISettingsTab: View {
                     url: url,
                     model: model,
                     apiKey: apiKey,
-                    systemPrompt: "回覆「OK」即可。"
+                    systemPrompt: "回覆「OK」即可。",
+                    temperature: settingsStore.settings.llmTemperature
                 )
                 let response = try await llm.process("測試")
                 testResult = (true, "\(provider.displayName) LLM 連線成功！（回應：\(response)）")

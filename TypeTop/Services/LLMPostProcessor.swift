@@ -7,12 +7,17 @@ struct LLMPostProcessor {
     private let model: String
     private let apiKey: String
     private let systemPrompt: String
+    private let temperature: Double
+    /// 用量統計 key（如 "llm.groq"），nil 表示不計入統計（例如連線測試）
+    private let usageKey: String?
 
-    init(url: String, model: String, apiKey: String, systemPrompt: String) {
+    init(url: String, model: String, apiKey: String, systemPrompt: String, temperature: Double = 0.3, usageKey: String? = nil) {
         self.url = url
         self.model = model
         self.apiKey = apiKey
         self.systemPrompt = systemPrompt
+        self.temperature = temperature
+        self.usageKey = usageKey
     }
 
     /// 使用 LLM 修正辨識文字
@@ -38,7 +43,7 @@ struct LLMPostProcessor {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": text]
             ],
-            "temperature": 0.7,
+            "temperature": temperature,
             "max_tokens": 2048
         ]
 
@@ -48,6 +53,14 @@ struct LLMPostProcessor {
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LLMError.invalidResponse
+        }
+
+        if usageKey == "llm.groq" {
+            UsageTracker.shared.updateGroqLimits(kind: "llm", response: httpResponse)
+        }
+
+        guard httpResponse.statusCode != 429 else {
+            throw LLMError.rateLimited
         }
 
         guard httpResponse.statusCode == 200 else {
@@ -63,6 +76,11 @@ struct LLMPostProcessor {
             throw LLMError.invalidResponse
         }
 
+        if let usageKey {
+            let totalTokens = (json["usage"] as? [String: Any])?["total_tokens"] as? Int
+            UsageTracker.shared.record(usageKey, tokens: totalTokens)
+        }
+
         let result = content.trimmingCharacters(in: .whitespacesAndNewlines)
         return result.isEmpty ? text : result
     }
@@ -72,11 +90,13 @@ struct LLMPostProcessor {
 enum LLMError: LocalizedError {
     case invalidResponse
     case apiError(String)
+    case rateLimited
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse: return "LLM API 回應格式錯誤"
         case .apiError(let msg): return "LLM API 錯誤：\(msg)"
+        case .rateLimited: return "已達 LLM API 用量上限（HTTP 429）"
         }
     }
 }

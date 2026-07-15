@@ -168,9 +168,9 @@ final class TranscriptionPipeline {
 
     private func transcribeAndInject(audioData: Data) async {
         do {
-            // 1. 呼叫 API 辨識
-            let service = STTServiceFactory.create(for: .groq)
+            // 1. 呼叫 API 辨識（使用設定中的 STT 供應商）
             let settings = settingsStore.settings
+            let service = STTServiceFactory.create(for: settings.activeProvider)
 
             var result = try await service.transcribe(
                 audioData: audioData,
@@ -185,20 +185,49 @@ final class TranscriptionPipeline {
             let llmApiKey = settingsStore.llmApiKey(for: llmProvider) ?? ""
             if settings.enableLLMPostProcessing,
                (!llmProvider.requiresAPIKey || !llmApiKey.isEmpty) {
-                let llmURL = settingsStore.llmURL(for: llmProvider)
-                let llmModel = settingsStore.llmModel(for: llmProvider)
-                // logger.notice("[TypeTop] LLM 後處理啟用，使用 \(llmProvider.displayName, privacy: .public) / \(llmModel, privacy: .public)")
-                let llm = LLMPostProcessor(
-                    url: llmURL,
-                    model: llmModel,
-                    apiKey: llmApiKey,
-                    systemPrompt: settings.llmSystemPrompt
-                )
-                do {
-                    result.processedText = try await llm.process(result.rawText)
-                    // logger.notice("[TypeTop] LLM 修正結果: \(result.processedText, privacy: .public)")
-                } catch {
-                    // logger.notice("[TypeTop] LLM 後處理失敗: \(error, privacy: .public)")
+                // 附加常用詞提示，協助 LLM 在同音字之間選對詞
+                var systemPrompt = settings.llmSystemPrompt
+                let hintWords = VocabularyStore.shared.library.hintWords
+                if !hintWords.isEmpty {
+                    systemPrompt += "\n\n使用者常用詞彙（遇同音或發音相近的字詞時，優先採用以下寫法）：\n" + hintWords.joined(separator: "、")
+                }
+
+                if llmProvider == .apple {
+                    // Apple Intelligence 本機模型（FoundationModels framework）
+                    if #available(macOS 26.0, *) {
+                        do {
+                            result.processedText = try await AppleFoundationModel.process(
+                                result.rawText,
+                                systemPrompt: systemPrompt,
+                                temperature: settings.llmTemperature
+                            )
+                            UsageTracker.shared.record("llm.apple")
+                        } catch {
+                            // 本機模型失敗（含安全護欄誤判）：使用原始辨識結果
+                            // logger.notice("[TypeTop] Apple 本機模型失敗: \(error, privacy: .public)")
+                        }
+                    }
+                } else {
+                    let llmURL = settingsStore.llmURL(for: llmProvider)
+                    let llmModel = settingsStore.llmModel(for: llmProvider)
+                    // logger.notice("[TypeTop] LLM 後處理啟用，使用 \(llmProvider.displayName, privacy: .public) / \(llmModel, privacy: .public)")
+                    let llm = LLMPostProcessor(
+                        url: llmURL,
+                        model: llmModel,
+                        apiKey: llmApiKey,
+                        systemPrompt: systemPrompt,
+                        temperature: settings.llmTemperature,
+                        usageKey: "llm.\(llmProvider.rawValue)"
+                    )
+                    do {
+                        result.processedText = try await llm.process(result.rawText)
+                        // logger.notice("[TypeTop] LLM 修正結果: \(result.processedText, privacy: .public)")
+                    } catch LLMError.rateLimited {
+                        // LLM 額度用罄：跳出切換詢問，本次直接使用原始辨識結果
+                        await MainActor.run { QuotaAlert.llmQuotaExceeded() }
+                    } catch {
+                        // logger.notice("[TypeTop] LLM 後處理失敗: \(error, privacy: .public)")
+                    }
                 }
             } else {
                 // logger.notice("[TypeTop] LLM 後處理未啟用")
@@ -223,6 +252,9 @@ final class TranscriptionPipeline {
                 state = .idle
             }
         } catch {
+            if case STTError.rateLimited = error {
+                await MainActor.run { QuotaAlert.sttQuotaExceeded() }
+            }
             state = .error(error.localizedDescription)
             errorMessage = error.localizedDescription
 
