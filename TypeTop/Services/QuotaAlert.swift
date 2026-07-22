@@ -33,7 +33,7 @@ enum QuotaAlert {
         alert.alertStyle = .warning
         alert.messageText = "\(current.displayName) 已達用量上限"
         if let candidate {
-            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
+            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
             alert.addButton(withTitle: "切換到 \(candidate.displayName)")
             alert.addButton(withTitle: "稍後再說")
             NSApp.activate(ignoringOtherApps: true)
@@ -41,7 +41,7 @@ enum QuotaAlert {
                 settingsStore.settings.llmProvider = candidate
             }
         } else {
-            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商的 Key。"
+            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商或帳號的 Key。"
             alert.addButton(withTitle: "知道了")
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
@@ -63,7 +63,7 @@ enum QuotaAlert {
         alert.alertStyle = .warning
         alert.messageText = "\(current.displayName) 已達用量上限"
         if let candidate {
-            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
+            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
             alert.addButton(withTitle: "切換到 \(candidate.displayName)")
             alert.addButton(withTitle: "稍後再說")
             NSApp.activate(ignoringOtherApps: true)
@@ -71,7 +71,7 @@ enum QuotaAlert {
                 settingsStore.settings.activeProvider = candidate
             }
         } else {
-            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商的 Key。"
+            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商或帳號的 Key。"
             alert.addButton(withTitle: "知道了")
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()

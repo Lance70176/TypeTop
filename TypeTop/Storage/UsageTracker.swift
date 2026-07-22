@@ -25,7 +25,7 @@ final class UsageTracker {
 
     /// 每日用量，key 為 yyyy-MM-dd
     private(set) var days: [String: DayUsage] = [:]
-    /// Groq 即時額度，key 為 "stt" 或 "llm"
+    /// Groq 即時額度，key 同用量 key（如 "stt.groq#<帳號ID>"），分帳號記錄
     private(set) var groqLimits: [String: GroqRateLimit] = [:]
 
     private let fileManager = FileManager.default
@@ -80,8 +80,8 @@ final class UsageTracker {
         }
     }
 
-    /// 從 Groq 回應 headers 更新即時額度（kind: "stt" 或 "llm"）
-    func updateGroqLimits(kind: String, response: HTTPURLResponse) {
+    /// 從 Groq 回應 headers 更新即時額度（key 為帳號用量 key，如 "stt.groq#<帳號ID>"）
+    func updateGroqLimits(key: String, response: HTTPURLResponse) {
         func intHeader(_ name: String) -> Int? {
             response.value(forHTTPHeaderField: name).flatMap { Int($0) }
         }
@@ -94,9 +94,30 @@ final class UsageTracker {
         )
         guard limit.remainingRequests != nil || limit.remainingTokens != nil else { return }
         DispatchQueue.main.async {
-            self.groqLimits[kind] = limit
+            self.groqLimits[key] = limit
             self.save()
         }
+    }
+
+    /// 舊格式遷移：把不含帳號的用量（與 Groq 額度）併入帳號 key
+    func migrateUsage(from oldKey: String, to newKey: String, oldLimitKey: String? = nil) {
+        var changed = false
+        for (day, var usage) in days {
+            if let count = usage.requests.removeValue(forKey: oldKey) {
+                usage.requests[newKey, default: 0] += count
+                changed = true
+            }
+            if let tokens = usage.tokens.removeValue(forKey: oldKey) {
+                usage.tokens[newKey, default: 0] += tokens
+                changed = true
+            }
+            days[day] = usage
+        }
+        if let oldLimitKey, let limit = groqLimits.removeValue(forKey: oldLimitKey) {
+            groqLimits[newKey] = limit
+            changed = true
+        }
+        if changed { save() }
     }
 
     func todayRequests(_ key: String) -> Int {
