@@ -56,38 +56,18 @@ final class SettingsStore {
 
     // MARK: - STT API Key
 
-    /// 取得 STT API Key
+    /// 取得 STT API Key（多帳號中目前使用的那組）
     func apiKey(for provider: APIProvider? = nil) -> String? {
         let p = provider ?? settings.activeProvider
-        return KeychainHelper.load(key: p.keychainKey)
-    }
-
-    /// 設定 STT API Key
-    func setAPIKey(_ key: String, for provider: APIProvider) {
-        KeychainHelper.save(key: provider.keychainKey, value: key)
-    }
-
-    /// 清除 STT API Key
-    func clearAPIKey(for provider: APIProvider) {
-        KeychainHelper.delete(key: provider.keychainKey)
+        return APIAccountStore.shared.activeKey(APIAccountStore.scope(stt: p))
     }
 
     // MARK: - LLM API Key
 
-    /// 取得 LLM API Key
+    /// 取得 LLM API Key（多帳號中目前使用的那組）
     func llmApiKey(for provider: LLMProvider? = nil) -> String? {
         let p = provider ?? settings.llmProvider
-        return KeychainHelper.load(key: p.keychainKey)
-    }
-
-    /// 設定 LLM API Key
-    func setLLMApiKey(_ key: String, for provider: LLMProvider) {
-        KeychainHelper.save(key: provider.keychainKey, value: key)
-    }
-
-    /// 清除 LLM API Key
-    func clearLLMApiKey(for provider: LLMProvider) {
-        KeychainHelper.delete(key: provider.keychainKey)
+        return APIAccountStore.shared.activeKey(APIAccountStore.scope(llm: p))
     }
 
     // MARK: - LLM 便捷方法

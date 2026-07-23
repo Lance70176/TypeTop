@@ -21,6 +21,7 @@
 		50BE437033887DB6907EA6EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60C9E19B347A7675EE46166 /* AppDelegate.swift */; };
 		57F3D4A59905CCADA4F0E416 /* TranscriptionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8980C3AB6B3972D666EA79 /* TranscriptionResult.swift */; };
 		617BCF6E529529062937D98B /* default_vocabulary.json in Resources */ = {isa = PBXBuildFile; fileRef = 65F338A2AC5288523DA166CF /* default_vocabulary.json */; };
+		70831874FEC5C8823D76FA5E /* APIAccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0C10670786DAD1F88980EA /* APIAccountStore.swift */; };
 		721555EB37DD507A4F30A13A /* UsageTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E713C4ABCC6E2C437E5B4D5 /* UsageTracker.swift */; };
 		73ED09E8FF363BE6A1C87CF0 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E5585B43884A45352E39F9 /* HotkeyManager.swift */; };
 		7C4B6B8B19FEE87C025F09D5 /* LLMPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF8952A7160B311E88DB41 /* LLMPostProcessor.swift */; };
@@ -70,6 +71,7 @@
 		AD5B8EAAEF15345275DB89D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADD92CAFFB3CE34C5B16DA5F /* TextPostProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPostProcessor.swift; sourceTree = "<group>"; };
 		B8E07E49433BFF5177B0984A /* AppleFoundationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationModel.swift; sourceTree = "<group>"; };
+		BA0C10670786DAD1F88980EA /* APIAccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIAccountStore.swift; sourceTree = "<group>"; };
 		D60C9E19B347A7675EE46166 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D782C1D0884199334A306256 /* LanguageSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSettingsTab.swift; sourceTree = "<group>"; };
 		E6E5585B43884A45352E39F9 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 		082877389810735FC135234B /* Storage */ = {
 			isa = PBXGroup;
 			children = (
+				BA0C10670786DAD1F88980EA /* APIAccountStore.swift */,
 				08E29E751410065B5D69A170 /* KeychainHelper.swift */,
 				FF7DA05EB04594B1A6A57B92 /* SettingsStore.swift */,
 				8E713C4ABCC6E2C437E5B4D5 /* UsageTracker.swift */,
@@ -257,6 +260,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				70831874FEC5C8823D76FA5E /* APIAccountStore.swift in Sources */,
 				01E74568436DA703CFE9C9B1 /* APIProvider.swift in Sources */,
 				F37EA5974BBB88EC470F6EA2 /* APISettingsTab.swift in Sources */,
 				50BE437033887DB6907EA6EE /* AppDelegate.swift in Sources */,

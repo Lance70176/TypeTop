@@ -211,22 +211,40 @@ final class TranscriptionPipeline {
                     let llmURL = settingsStore.llmURL(for: llmProvider)
                     let llmModel = settingsStore.llmModel(for: llmProvider)
                     // logger.notice("[TypeTop] LLM 後處理啟用，使用 \(llmProvider.displayName, privacy: .public) / \(llmModel, privacy: .public)")
-                    let llm = LLMPostProcessor(
-                        url: llmURL,
-                        model: llmModel,
-                        apiKey: llmApiKey,
-                        systemPrompt: systemPrompt,
-                        temperature: settings.llmTemperature,
-                        usageKey: "llm.\(llmProvider.rawValue)"
-                    )
-                    do {
-                        result.processedText = try await llm.process(result.rawText)
-                        // logger.notice("[TypeTop] LLM 修正結果: \(result.processedText, privacy: .public)")
-                    } catch LLMError.rateLimited {
-                        // LLM 額度用罄：跳出切換詢問，本次直接使用原始辨識結果
-                        await MainActor.run { QuotaAlert.llmQuotaExceeded() }
-                    } catch {
-                        // logger.notice("[TypeTop] LLM 後處理失敗: \(error, privacy: .public)")
+                    let scope = APIAccountStore.scope(llm: llmProvider)
+                    let accountStore = APIAccountStore.shared
+                    var apiKey = llmApiKey
+                    // 達額度（429）時自動輪替到下一組帳號重試，全部試過才跳出切換供應商詢問
+                    var triedIDs: Set<UUID> = []
+                    while true {
+                        let llm = LLMPostProcessor(
+                            url: llmURL,
+                            model: llmModel,
+                            apiKey: apiKey,
+                            systemPrompt: systemPrompt,
+                            temperature: settings.llmTemperature,
+                            usageKey: accountStore.usageKey(scope)
+                        )
+                        do {
+                            result.processedText = try await llm.process(result.rawText)
+                            // logger.notice("[TypeTop] LLM 修正結果: \(result.processedText, privacy: .public)")
+                            break
+                        } catch LLMError.rateLimited {
+                            if let currentID = accountStore.activeAccount(scope)?.id {
+                                triedIDs.insert(currentID)
+                            }
+                            let next = await MainActor.run { accountStore.switchToNext(scope) }
+                            if let next, !triedIDs.contains(next.id) {
+                                apiKey = next.key
+                            } else {
+                                // 所有帳號額度用罄：跳出切換詢問，本次直接使用原始辨識結果
+                                await MainActor.run { QuotaAlert.llmQuotaExceeded() }
+                                break
+                            }
+                        } catch {
+                            // logger.notice("[TypeTop] LLM 後處理失敗: \(error, privacy: .public)")
+                            break
+                        }
                     }
                 }
             } else {

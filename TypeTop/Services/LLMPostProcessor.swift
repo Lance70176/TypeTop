@@ -55,8 +55,8 @@ struct LLMPostProcessor {
             throw LLMError.invalidResponse
         }
 
-        if usageKey == "llm.groq" {
-            UsageTracker.shared.updateGroqLimits(kind: "llm", response: httpResponse)
+        if let usageKey, usageKey.hasPrefix("llm.groq") {
+            UsageTracker.shared.updateGroqLimits(key: usageKey, response: httpResponse)
         }
 
         guard httpResponse.statusCode != 429 else {

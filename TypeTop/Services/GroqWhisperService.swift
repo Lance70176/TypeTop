@@ -6,9 +6,32 @@ struct GroqWhisperService: STTService {
     func transcribe(audioData: Data, language: String?, prompt: String?) async throws -> TranscriptionResult {
         guard !audioData.isEmpty else { throw STTError.emptyAudio }
 
-        guard let apiKey = SettingsStore.shared.apiKey(for: .groq) else {
+        let scope = APIAccountStore.scope(stt: .groq)
+        let store = APIAccountStore.shared
+
+        guard var account = await MainActor.run(body: { store.activeAccount(scope) }) else {
             throw STTError.noAPIKey
         }
+
+        // 達額度（429）時自動輪替到下一組帳號重試，全部試過才放棄
+        var triedIDs: Set<UUID> = []
+        while true {
+            do {
+                return try await attempt(audioData: audioData, language: language, prompt: prompt, account: account, scope: scope)
+            } catch STTError.rateLimited {
+                triedIDs.insert(account.id)
+                let next = await MainActor.run { store.switchToNext(scope) }
+                guard let next, !triedIDs.contains(next.id) else {
+                    throw STTError.rateLimited
+                }
+                account = next
+            }
+        }
+    }
+
+    private func attempt(audioData: Data, language: String?, prompt: String?, account: APIAccount, scope: String) async throws -> TranscriptionResult {
+        let apiKey = account.key
+        let usageKey = "\(scope)#\(account.id.uuidString)"
 
         let startTime = Date()
 
@@ -54,7 +77,7 @@ struct GroqWhisperService: STTService {
             throw STTError.invalidResponse
         }
 
-        UsageTracker.shared.updateGroqLimits(kind: "stt", response: httpResponse)
+        UsageTracker.shared.updateGroqLimits(key: usageKey, response: httpResponse)
 
         guard httpResponse.statusCode != 429 else {
             throw STTError.rateLimited
@@ -65,7 +88,7 @@ struct GroqWhisperService: STTService {
             throw STTError.apiError("HTTP \(httpResponse.statusCode): \(errorMsg)")
         }
 
-        UsageTracker.shared.record("stt.groq")
+        UsageTracker.shared.record(usageKey)
 
         let duration = Date().timeIntervalSince(startTime)
 
