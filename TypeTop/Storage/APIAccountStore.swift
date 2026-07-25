@@ -88,11 +88,19 @@ final class APIAccountStore {
         save()
     }
 
-    /// 更新既有帳號的 Key（編輯用；帳號 id 不變，用量統計因此延續）
-    func update(accountID: UUID, key: String, scope: String) {
+    /// 更新既有帳號的名稱與 Key（編輯用；帳號 id 不變，用量統計因此延續）
+    /// 傳 nil 表示該欄位不更動；名稱留空則沿用原本的名稱。
+    func update(accountID: UUID, label: String? = nil, key: String? = nil, scope: String) {
         guard var s = scopes[scope],
               let index = s.accounts.firstIndex(where: { $0.id == accountID }) else { return }
-        s.accounts[index].key = key
+        if let label {
+            let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { s.accounts[index].label = trimmed }
+        }
+        if let key {
+            let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { s.accounts[index].key = trimmed }
+        }
         scopes[scope] = s
         save()
     }

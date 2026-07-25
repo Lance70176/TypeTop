@@ -16,8 +16,9 @@ struct APISettingsTab: View {
     @State private var testingLLM: Bool = false
     @State private var testResult: (success: Bool, message: String)?
 
-    // 編輯既有帳號的 Key
+    // 編輯既有帳號的名稱與 Key
     @State private var editingAccountID: UUID?
+    @State private var editingLabel: String = ""
     @State private var editingKey: String = ""
     @State private var editingKeyVisible: Bool = true
 
@@ -271,6 +272,7 @@ struct APISettingsTab: View {
                             endEditing()
                         } else {
                             editingAccountID = account.id
+                            editingLabel = account.label
                             editingKey = account.key
                             editingKeyVisible = true
                         }
@@ -278,7 +280,7 @@ struct APISettingsTab: View {
                         Image(systemName: editingAccountID == account.id ? "chevron.up" : "pencil")
                     }
                     .buttonStyle(.borderless)
-                    .help(editingAccountID == account.id ? "收合" : "檢視／編輯此 Key")
+                    .help(editingAccountID == account.id ? "收合" : "檢視／編輯名稱與 Key")
 
                     Button(role: .destructive) {
                         if editingAccountID == account.id { endEditing() }
@@ -292,6 +294,17 @@ struct APISettingsTab: View {
 
                 if editingAccountID == account.id {
                     HStack {
+                        Text("名稱")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("帳號名稱", text: $editingLabel)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text("Key")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         if editingKeyVisible {
                             TextField(placeholder, text: $editingKey)
                                 .textFieldStyle(.roundedBorder)
@@ -305,18 +318,26 @@ struct APISettingsTab: View {
                             Image(systemName: editingKeyVisible ? "eye.slash" : "eye")
                         }
                         .buttonStyle(.borderless)
+                    }
 
-                        Button("儲存") {
-                            let trimmed = editingKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmed.isEmpty else { return }
-                            accountStore.update(accountID: account.id, key: trimmed, scope: scope)
-                            endEditing()
-                        }
-                        .disabled(editingKeyTrimmed.isEmpty || editingKeyTrimmed == account.key)
+                    HStack {
+                        Spacer()
 
                         Button("取消") {
                             endEditing()
                         }
+
+                        Button("儲存") {
+                            accountStore.update(
+                                accountID: account.id,
+                                label: editingLabelTrimmed,
+                                key: editingKeyTrimmed,
+                                scope: scope
+                            )
+                            endEditing()
+                        }
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(!hasEdits(for: account))
                     }
                 }
             }
@@ -333,8 +354,19 @@ struct APISettingsTab: View {
         editingKey.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var editingLabelTrimmed: String {
+        editingLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 名稱或 Key 有實際變動才允許儲存；兩者都不可留空
+    private func hasEdits(for account: APIAccount) -> Bool {
+        guard !editingLabelTrimmed.isEmpty, !editingKeyTrimmed.isEmpty else { return false }
+        return editingLabelTrimmed != account.label || editingKeyTrimmed != account.key
+    }
+
     private func endEditing() {
         editingAccountID = nil
+        editingLabel = ""
         editingKey = ""
         editingKeyVisible = true
     }
