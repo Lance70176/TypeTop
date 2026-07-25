@@ -88,6 +88,15 @@ final class APIAccountStore {
         save()
     }
 
+    /// 更新既有帳號的 Key（編輯用；帳號 id 不變，用量統計因此延續）
+    func update(accountID: UUID, key: String, scope: String) {
+        guard var s = scopes[scope],
+              let index = s.accounts.firstIndex(where: { $0.id == accountID }) else { return }
+        s.accounts[index].key = key
+        scopes[scope] = s
+        save()
+    }
+
     func remove(accountID: UUID, scope: String) {
         guard var s = scopes[scope] else { return }
         s.accounts.removeAll { $0.id == accountID }
