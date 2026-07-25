@@ -16,6 +16,11 @@ struct APISettingsTab: View {
     @State private var testingLLM: Bool = false
     @State private var testResult: (success: Bool, message: String)?
 
+    // 編輯既有帳號的 Key
+    @State private var editingAccountID: UUID?
+    @State private var editingKey: String = ""
+    @State private var editingKeyVisible: Bool = true
+
     private var selectedLLM: LLMProvider {
         settingsStore.settings.llmProvider
     }
@@ -32,7 +37,7 @@ struct APISettingsTab: View {
         Form {
             // MARK: - STT Section
             Section("語音辨識（STT）— Groq") {
-                accountRows(scope: sttScope)
+                accountRows(scope: sttScope, placeholder: "gsk_...")
                 addAccountRow(placeholder: "gsk_...", key: $newSTTKey, visible: $newSTTKeyVisible, scope: sttScope)
 
                 HStack {
@@ -91,7 +96,7 @@ struct APISettingsTab: View {
 
                 // API Key 帳號列表（Ollama / Apple 不需要）
                 if selectedLLM.requiresAPIKey {
-                    accountRows(scope: llmScope)
+                    accountRows(scope: llmScope, placeholder: selectedLLM.keyPlaceholder)
                     addAccountRow(placeholder: selectedLLM.keyPlaceholder, key: $newLLMKey, visible: $newLLMKeyVisible, scope: llmScope)
                 }
 
@@ -221,6 +226,7 @@ struct APISettingsTab: View {
         .onChange(of: settingsStore.settings.llmProvider) { _, _ in
             newLLMKey = ""
             newLLMKeyVisible = false
+            endEditing()
             testResult = nil
         }
     }
@@ -228,44 +234,91 @@ struct APISettingsTab: View {
     // MARK: - 帳號列表
 
     @ViewBuilder
-    private func accountRows(scope: String) -> some View {
+    private func accountRows(scope: String, placeholder: String) -> some View {
         let accounts = accountStore.accounts(scope)
         let activeID = accountStore.activeAccount(scope)?.id
 
         ForEach(accounts) { account in
-            HStack {
-                Button {
-                    accountStore.setActive(accountID: account.id, scope: scope)
-                } label: {
-                    Image(systemName: account.id == activeID ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(account.id == activeID ? Color.accentColor : Color.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Button {
+                        accountStore.setActive(accountID: account.id, scope: scope)
+                    } label: {
+                        Image(systemName: account.id == activeID ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(account.id == activeID ? Color.accentColor : Color.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .help("設為使用中")
+
+                    Text(account.label)
+                    Text(account.maskedKey)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if account.id == activeID {
+                        Text("使用中")
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.green.opacity(0.15)))
+                            .foregroundStyle(.green)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        if editingAccountID == account.id {
+                            endEditing()
+                        } else {
+                            editingAccountID = account.id
+                            editingKey = account.key
+                            editingKeyVisible = true
+                        }
+                    } label: {
+                        Image(systemName: editingAccountID == account.id ? "chevron.up" : "pencil")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(editingAccountID == account.id ? "收合" : "檢視／編輯此 Key")
+
+                    Button(role: .destructive) {
+                        if editingAccountID == account.id { endEditing() }
+                        accountStore.remove(accountID: account.id, scope: scope)
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("刪除此帳號")
                 }
-                .buttonStyle(.borderless)
-                .help("設為使用中")
 
-                Text(account.label)
-                Text(account.maskedKey)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if editingAccountID == account.id {
+                    HStack {
+                        if editingKeyVisible {
+                            TextField(placeholder, text: $editingKey)
+                                .textFieldStyle(.roundedBorder)
+                        } else {
+                            SecureField(placeholder, text: $editingKey)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        Button {
+                            editingKeyVisible.toggle()
+                        } label: {
+                            Image(systemName: editingKeyVisible ? "eye.slash" : "eye")
+                        }
+                        .buttonStyle(.borderless)
 
-                if account.id == activeID {
-                    Text("使用中")
-                        .font(.caption2)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Color.green.opacity(0.15)))
-                        .foregroundStyle(.green)
+                        Button("儲存") {
+                            let trimmed = editingKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            accountStore.update(accountID: account.id, key: trimmed, scope: scope)
+                            endEditing()
+                        }
+                        .disabled(editingKeyTrimmed.isEmpty || editingKeyTrimmed == account.key)
+
+                        Button("取消") {
+                            endEditing()
+                        }
+                    }
                 }
-
-                Spacer()
-
-                Button(role: .destructive) {
-                    accountStore.remove(accountID: account.id, scope: scope)
-                } label: {
-                    Image(systemName: "trash")
-                }
-                .buttonStyle(.borderless)
-                .help("刪除此帳號")
             }
         }
 
@@ -274,6 +327,16 @@ struct APISettingsTab: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var editingKeyTrimmed: String {
+        editingKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func endEditing() {
+        editingAccountID = nil
+        editingKey = ""
+        editingKeyVisible = true
     }
 
     // MARK: - 新增帳號
