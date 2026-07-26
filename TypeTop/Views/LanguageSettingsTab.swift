@@ -6,63 +6,72 @@ struct LanguageSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("主要語言") {
-                Picker("辨識語言", selection: Bindable(settingsStore).settings.primaryLanguage) {
+            Section(L("lang.section.primary")) {
+                Picker(L("lang.recognition-language"), selection: Bindable(settingsStore).settings.primaryLanguage) {
                     ForEach(SupportedLanguage.allCases) { lang in
                         Text(lang.displayName).tag(lang)
                     }
                 }
+                .onChange(of: settingsStore.settings.primaryLanguage) { _, newValue in
+                    // 使用者沒自訂過的提示詞才跟著換語言，避免蓋掉手動修改
+                    if PromptTemplates.isDefaultWhisperPrompt(settingsStore.settings.whisperPrompt) {
+                        settingsStore.settings.whisperPrompt = PromptTemplates.whisperPrompt(for: newValue)
+                    }
+                    if PromptTemplates.isDefaultCorrectionPrompt(settingsStore.settings.llmSystemPrompt) {
+                        settingsStore.settings.llmSystemPrompt = settingsStore.settings.llmCorrectionLevel.defaultPrompt(for: newValue)
+                    }
+                }
 
-                Toggle("中英文混合模式", isOn: Bindable(settingsStore).settings.mixedLanguageMode)
+                Toggle(L("lang.mixed-mode"), isOn: Bindable(settingsStore).settings.mixedLanguageMode)
 
-                Text("啟用混合模式後，Whisper 會同時辨識中文和英文內容")
+                Text(L("lang.mixed-mode-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("文字處理") {
-                Toggle("中英文之間自動加空格", isOn: Bindable(settingsStore).settings.autoSpaceBetweenCJKAndLatin)
+            Section(L("lang.section.text")) {
+                Toggle(L("lang.auto-space"), isOn: Bindable(settingsStore).settings.autoSpaceBetweenCJKAndLatin)
 
-                Text("例如「使用React框架」→「使用 React 框架」")
+                Text(L("lang.auto-space-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Picker("標點符號風格", selection: Bindable(settingsStore).settings.punctuationStyle) {
+                Picker(L("lang.punctuation-style"), selection: Bindable(settingsStore).settings.punctuationStyle) {
                     ForEach(PunctuationStyle.allCases, id: \.rawValue) { style in
                         Text(style.displayName).tag(style)
                     }
                 }
 
-                Text("全形：，。！？　半形：,.!?　無標點：移除全部　保持原樣：不轉換")
+                Text(L("lang.punctuation-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Whisper 提示詞") {
+            Section(L("lang.section.whisper-prompt")) {
                 TextEditor(text: Bindable(settingsStore).settings.whisperPrompt)
                     .frame(height: 80)
                     .font(.system(.body, design: .monospaced))
 
-                Text("提示詞幫助 Whisper 理解語境，可加入常用專有名詞以提升辨識準確度。例如輸入「TypeTop, React, Python」，Whisper 會優先辨識這些詞彙。")
+                Text(L("lang.whisper-prompt-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Button("重置為預設") {
-                    settingsStore.settings.whisperPrompt = AppSettings().whisperPrompt
+                Button(L("common.reset-default")) {
+                    settingsStore.settings.whisperPrompt = PromptTemplates.whisperPrompt(for: settingsStore.settings.primaryLanguage)
                 }
             }
 
-            Section("LLM 語意後處理") {
-                Toggle("啟用 LLM 智慧修正", isOn: Bindable(settingsStore).settings.enableLLMPostProcessing)
+            Section(L("lang.section.llm")) {
+                Toggle(L("lang.enable-llm"), isOn: Bindable(settingsStore).settings.enableLLMPostProcessing)
 
-                Picker("LLM 供應商", selection: Bindable(settingsStore).settings.llmProvider) {
+                Picker(L("api.llm-provider"), selection: Bindable(settingsStore).settings.llmProvider) {
                     ForEach(LLMProvider.allCases) { provider in
                         Text(provider.displayName).tag(provider)
                     }
                 }
 
                 HStack {
-                    Text("使用模型")
+                    Text(L("lang.model-in-use"))
                     Spacer()
                     Text(settingsStore.llmModel())
                         .foregroundStyle(.secondary)
@@ -73,18 +82,18 @@ struct LanguageSettingsTab: View {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        Text("請先在 API 設定頁面輸入 \(settingsStore.settings.llmProvider.displayName) 的 API Key")
+                        Text(L("lang.need-api-key", settingsStore.settings.llmProvider.displayName))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     }
                 }
 
-                Text("語音辨識（STT）和語意修正（LLM）可使用不同供應商。例如 Groq 做語音轉文字、OpenAI GPT 做智慧修正。")
+                Text(L("lang.provider-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 HStack {
-                    Text("取樣溫度")
+                    Text(L("lang.temperature"))
                     Slider(value: Bindable(settingsStore).settings.llmTemperature, in: 0...1, step: 0.1)
                     Text(String(format: "%.1f", settingsStore.settings.llmTemperature))
                         .foregroundStyle(.secondary)
@@ -92,17 +101,17 @@ struct LanguageSettingsTab: View {
                         .frame(width: 28, alignment: .trailing)
                 }
 
-                Text("溫度越低輸出越穩定，越高越有變化。錯字修正建議 0~0.3。")
+                Text(L("lang.temperature-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("LLM 系統提示詞") {
-                Picker("修正程度", selection: Binding(
+            Section(L("lang.section.system-prompt")) {
+                Picker(L("lang.correction-level"), selection: Binding(
                     get: { settingsStore.settings.llmCorrectionLevel },
                     set: { newLevel in
                         settingsStore.settings.llmCorrectionLevel = newLevel
-                        settingsStore.settings.llmSystemPrompt = newLevel.defaultPrompt
+                        settingsStore.settings.llmSystemPrompt = newLevel.defaultPrompt(for: settingsStore.settings.primaryLanguage)
                     }
                 )) {
                     ForEach(LLMCorrectionLevel.allCases) { level in
@@ -114,12 +123,12 @@ struct LanguageSettingsTab: View {
                     .frame(height: 120)
                     .font(.system(.caption, design: .monospaced))
 
-                Text("選擇修正程度會自動套用預設提示詞，也可手動編輯。")
+                Text(L("lang.level-note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Button("重置為目前程度的預設") {
-                    settingsStore.settings.llmSystemPrompt = settingsStore.settings.llmCorrectionLevel.defaultPrompt
+                Button(L("lang.reset-level-default")) {
+                    settingsStore.settings.llmSystemPrompt = settingsStore.settings.llmCorrectionLevel.defaultPrompt(for: settingsStore.settings.primaryLanguage)
                 }
             }
             .disabled(!settingsStore.settings.enableLLMPostProcessing)

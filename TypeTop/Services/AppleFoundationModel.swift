@@ -17,19 +17,19 @@ enum AppleFoundationModel {
     /// 不可用時的原因說明（可用時回傳 nil）
     static var unavailableReason: String? {
         guard #available(macOS 26.0, *) else {
-            return "需要 macOS 26 以上版本"
+            return L("error.apple.os-version")
         }
         switch SystemLanguageModel.default.availability {
         case .available:
             return nil
         case .unavailable(.deviceNotEligible):
-            return "此裝置不支援 Apple Intelligence（需 Apple Silicon）"
+            return L("error.apple.unsupported-device")
         case .unavailable(.appleIntelligenceNotEnabled):
-            return "請先在「系統設定」開啟 Apple Intelligence"
+            return L("error.apple.not-enabled")
         case .unavailable(.modelNotReady):
-            return "模型準備中（可能正在下載），請稍後再試"
+            return L("error.apple.model-not-ready")
         case .unavailable:
-            return "Apple Intelligence 目前無法使用"
+            return L("error.apple.unavailable")
         }
     }
 
@@ -38,7 +38,7 @@ enum AppleFoundationModel {
     static func process(_ text: String, systemPrompt: String, temperature: Double) async throws -> String {
         guard !text.isEmpty else { return text }
         guard isAvailable else {
-            throw LLMError.apiError(unavailableReason ?? "Apple Intelligence 目前無法使用")
+            throw LLMError.apiError(unavailableReason ?? L("error.apple.unavailable"))
         }
 
         // 3B 小模型容易把輸入當成對話而直接回應內容；

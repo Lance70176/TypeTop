@@ -60,21 +60,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // 快捷鍵提示
-        let hotkeyItem = NSMenuItem(title: "按住右側 ⌘ 說話", action: nil, keyEquivalent: "")
+        let hotkeyItem = NSMenuItem(title: L("menu.hold-to-speak", SettingsStore.shared.settings.activationKey.displayName), action: nil, keyEquivalent: "")
         hotkeyItem.isEnabled = false
         menu.addItem(hotkeyItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // 偏好設定
-        let settingsMenuItem = NSMenuItem(title: "偏好設定...", action: #selector(openSettingsAction), keyEquivalent: ",")
+        let settingsMenuItem = NSMenuItem(title: L("menu.preferences"), action: #selector(openSettingsAction), keyEquivalent: ",")
         settingsMenuItem.target = self
         menu.addItem(settingsMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // 結束
-        let quitItem = NSMenuItem(title: "結束 TypeTop", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quitItem)
 
         menu.delegate = self
@@ -103,7 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "TypeTop 偏好設定"
+        window.title = L("window.preferences")
         window.contentViewController = hostingController
         window.center()
         window.isReleasedWhenClosed = false
@@ -118,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func updateStatusIcon(isRecording: Bool) {
         DispatchQueue.main.async { [weak self] in
             if isRecording {
-                self?.statusItem.button?.image = NSImage(systemSymbolName: "mic.badge.plus", accessibilityDescription: "錄音中")
+                self?.statusItem.button?.image = NSImage(systemSymbolName: "mic.badge.plus", accessibilityDescription: L("state.recording"))
             } else {
                 self?.statusItem.button?.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "TypeTop")
             }

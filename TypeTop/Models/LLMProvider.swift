@@ -20,9 +20,9 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "DeepSeek"
         case .moonshot: return "Moonshot (Kimi)"
         case .gemini: return "Google Gemini"
-        case .apple: return "Apple 本機模型"
-        case .ollama: return "Ollama (本地)"
-        case .custom: return "自訂"
+        case .apple: return L("provider.apple")
+        case .ollama: return L("provider.ollama")
+        case .custom: return L("provider.custom")
         }
     }
 
@@ -46,7 +46,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .deepseek: return "deepseek-chat"
         case .moonshot: return "kimi-k2.5"
         case .gemini: return "gemini-3.1-flash-lite"
-        case .apple: return "系統內建模型（on-device）"
+        case .apple: return L("provider.apple-model")
         case .ollama: return "llama3"
         case .custom: return "" // 由 AppSettings.customLLMModel 提供
         }
@@ -61,7 +61,7 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
         case .gemini: return "AIza..."
         case .apple: return ""
         case .ollama: return ""
-        case .custom: return "API Key（若需要）"
+        case .custom: return L("provider.custom-key-placeholder")
         }
     }
 
@@ -86,21 +86,21 @@ enum LLMProvider: String, Codable, CaseIterable, Identifiable {
     var helpText: String {
         switch self {
         case .openai:
-            return "前往 platform.openai.com → API Keys → Create new secret key。需預先儲值，使用 gpt-4o-mini 費用極低。"
+            return L("provider.help.openai")
         case .groq:
-            return "前往 console.groq.com → API Keys → Create API Key。Groq 提供免費額度，日常使用綽綽有餘。"
+            return L("provider.help.groq")
         case .deepseek:
-            return "前往 platform.deepseek.com → API Keys。DeepSeek 提供高性價比的中文 LLM。"
+            return L("provider.help.deepseek")
         case .moonshot:
-            return "前往 platform.moonshot.ai → API Keys。Moonshot (Kimi) 支援中文語境最佳化。"
+            return L("provider.help.moonshot")
         case .gemini:
-            return "前往 aistudio.google.com → Get API Key。Gemini 提供免費額度。"
+            return L("provider.help.gemini")
         case .apple:
-            return "使用 macOS 26 內建的 Apple Intelligence 本機模型（約 3B）。免費、離線可用、內容不離開這台電腦。需 Apple Silicon 並在「系統設定」開啟 Apple Intelligence。"
+            return L("provider.help.apple")
         case .ollama:
-            return "請確保 Ollama 已在本機執行（預設 http://localhost:11434）。不需要 API Key。"
+            return L("provider.help.ollama")
         case .custom:
-            return "填入相容 OpenAI Chat Completions API 格式的 endpoint URL 和模型名稱。"
+            return L("provider.help.custom")
         }
     }
 

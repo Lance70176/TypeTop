@@ -15,12 +15,12 @@ enum ActivationKey: UInt16, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .rightCommand: return "右側 ⌘"
-        case .leftCommand: return "左側 ⌘"
-        case .rightOption: return "右側 ⌥"
-        case .leftOption: return "左側 ⌥"
-        case .rightControl: return "右側 ⌃"
-        case .leftControl: return "左側 ⌃"
+        case .rightCommand: return L("key.right-command")
+        case .leftCommand: return L("key.left-command")
+        case .rightOption: return L("key.right-option")
+        case .leftOption: return L("key.left-option")
+        case .rightControl: return L("key.right-control")
+        case .leftControl: return L("key.left-control")
         case .fn: return "fn"
         }
     }
@@ -52,6 +52,9 @@ struct AppSettings: Codable {
     /// 主要辨識語言
     var primaryLanguage: SupportedLanguage = .zhHant
 
+    /// 介面顯示語言（預設跟隨系統）
+    var uiLanguage: SupportedLanguage = L10n.systemDefault()
+
     /// 是否啟用中英混合模式
     var mixedLanguageMode: Bool = true
 
@@ -74,7 +77,7 @@ struct AppSettings: Codable {
     var muteSystemAudioWhileRecording: Bool = false
 
     /// Whisper prompt 模板
-    var whisperPrompt: String = "繁體中文語音輸入，可能包含英文單字如 API、iPhone、React、TypeScript、macOS 等技術術語。"
+    var whisperPrompt: String = PromptTemplates.whisperPrompt(for: .zhHant)
 
     /// 錄音後自動送出的延遲（秒）
     var autoSendDelay: Double = 0.3
@@ -103,7 +106,7 @@ struct AppSettings: Codable {
     static let defaultLLMPrompt = LLMCorrectionLevel.medium.defaultPrompt
 
     private enum CodingKeys: String, CodingKey {
-        case activeProvider, primaryLanguage, mixedLanguageMode, autoSpaceBetweenCJKAndLatin
+        case activeProvider, primaryLanguage, uiLanguage, mixedLanguageMode, autoSpaceBetweenCJKAndLatin
         case punctuationStyle, activationKey, launchAtLogin, playSoundEffects, muteSystemAudioWhileRecording
         case whisperPrompt, autoSendDelay, enableLLMPostProcessing, llmProvider
         case llmCorrectionLevel, llmSystemPrompt, llmTemperature, customLLMBaseURL, customLLMModel
@@ -116,6 +119,7 @@ struct AppSettings: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         activeProvider = try container.decodeIfPresent(APIProvider.self, forKey: .activeProvider) ?? .groq
         primaryLanguage = try container.decodeIfPresent(SupportedLanguage.self, forKey: .primaryLanguage) ?? .zhHant
+        uiLanguage = try container.decodeIfPresent(SupportedLanguage.self, forKey: .uiLanguage) ?? L10n.systemDefault()
         mixedLanguageMode = try container.decodeIfPresent(Bool.self, forKey: .mixedLanguageMode) ?? true
         autoSpaceBetweenCJKAndLatin = try container.decodeIfPresent(Bool.self, forKey: .autoSpaceBetweenCJKAndLatin) ?? true
         punctuationStyle = try container.decodeIfPresent(PunctuationStyle.self, forKey: .punctuationStyle) ?? .fullWidth
@@ -130,7 +134,7 @@ struct AppSettings: Codable {
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         playSoundEffects = try container.decodeIfPresent(Bool.self, forKey: .playSoundEffects) ?? true
         muteSystemAudioWhileRecording = try container.decodeIfPresent(Bool.self, forKey: .muteSystemAudioWhileRecording) ?? false
-        whisperPrompt = try container.decodeIfPresent(String.self, forKey: .whisperPrompt) ?? "繁體中文語音輸入，可能包含英文單字如 API、iPhone、React、TypeScript、macOS 等技術術語。"
+        whisperPrompt = try container.decodeIfPresent(String.self, forKey: .whisperPrompt) ?? PromptTemplates.whisperPrompt(for: primaryLanguage)
         autoSendDelay = try container.decodeIfPresent(Double.self, forKey: .autoSendDelay) ?? 0.3
         enableLLMPostProcessing = try container.decodeIfPresent(Bool.self, forKey: .enableLLMPostProcessing) ?? true
         // 向後相容：先嘗試解碼新的 LLMProvider，失敗則嘗試舊的 APIProvider 並映射
@@ -155,6 +159,7 @@ struct AppSettings: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(activeProvider, forKey: .activeProvider)
         try container.encode(primaryLanguage, forKey: .primaryLanguage)
+        try container.encode(uiLanguage, forKey: .uiLanguage)
         try container.encode(mixedLanguageMode, forKey: .mixedLanguageMode)
         try container.encode(autoSpaceBetweenCJKAndLatin, forKey: .autoSpaceBetweenCJKAndLatin)
         try container.encode(punctuationStyle, forKey: .punctuationStyle)
@@ -218,74 +223,30 @@ enum LLMCorrectionLevel: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .none: return "無修正"
-        case .light: return "輕微"
-        case .medium: return "中等"
-        case .heavy: return "重度"
+        case .none: return L("level.none")
+        case .light: return L("level.light")
+        case .medium: return L("level.medium")
+        case .heavy: return L("level.heavy")
         }
     }
 
     var description: String {
         switch self {
-        case .none: return "僅加標點符號，完全保留原文"
-        case .light: return "修正錯字、加標點，保留口語風格"
-        case .medium: return "改寫為書面語，去除贅詞"
-        case .heavy: return "大幅精煉，重組句子結構"
+        case .none: return L("level.none.desc")
+        case .light: return L("level.light.desc")
+        case .medium: return L("level.medium.desc")
+        case .heavy: return L("level.heavy.desc")
         }
     }
 
+    /// 指定輸出語言的預設提示詞
+    func defaultPrompt(for language: SupportedLanguage) -> String {
+        PromptTemplates.correctionPrompt(level: self, language: language)
+    }
+
+    /// 繁體中文的預設提示詞（向後相容用）
     var defaultPrompt: String {
-        switch self {
-        case .none:
-            return """
-                你是語音輸入的標點助手。使用者透過語音輸入文字，你只需要加上標點符號。
-
-                規則：
-                1. 完全保留原文的每一個字，不要刪除、替換或改寫任何詞語
-                2. 只加上適當的標點符號（逗號、句號、問號、驚嘆號）
-                3. 使用繁體中文標點
-                4. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
-                5. 直接輸出結果，不要加任何解釋
-                """
-        case .light:
-            return """
-                你是語音輸入的修正助手。使用者透過語音輸入文字，你要做最小幅度的修正。
-
-                規則：
-                1. 保留原文的語氣和用詞風格，包括口語表達
-                2. 只修正明顯的錯字和語音辨識錯誤
-                3. 加上適當的標點符號
-                4. 使用繁體中文，不要用簡體
-                5. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
-                6. 不要刪除任何內容，不要改變語序
-                7. 直接輸出修正後的文字，不要加任何解釋
-                """
-        case .medium:
-            return """
-                你是語音輸入的改寫助手。使用者透過語音輸入文字，你要理解他的意思，然後用通順的書面語重新寫出來。
-
-                規則：
-                1. 先理解語意，再用清晰的書面中文改寫，去除口語贅詞（嗯、那個、就是說）
-                2. 使用繁體中文，不要用簡體
-                3. 加上適當的標點符號，讓句子結構清晰
-                4. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
-                5. 保持原意，但可以調整語序和用詞讓表達更精確
-                6. 直接輸出改寫後的文字，不要加任何解釋
-                """
-        case .heavy:
-            return """
-                你是語音輸入的精煉助手。使用者透過語音輸入文字，你要將內容大幅精煉為精確、簡潔的書面語。
-
-                規則：
-                1. 深度理解語意後，用最精煉的書面中文重新表達
-                2. 刪除所有口語贅詞、重複表達和不必要的修飾
-                3. 重組句子結構，讓邏輯更清晰
-                4. 使用繁體中文，不要用簡體
-                5. 加上適當的標點符號
-                6. 英文專有名詞保持正確拼寫（如 API、iPhone、React、TypeScript、macOS）
-                7. 直接輸出精煉後的文字，不要加任何解釋
-                """
-        }
+        defaultPrompt(for: .zhHant)
     }
 }
 
@@ -298,10 +259,10 @@ enum PunctuationStyle: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .fullWidth: return "全形標點"
-        case .halfWidth: return "半形標點"
-        case .none: return "無標點符號"
-        case .keep: return "保持原樣"
+        case .fullWidth: return L("punct.full")
+        case .halfWidth: return L("punct.half")
+        case .none: return L("punct.none")
+        case .keep: return L("punct.keep")
         }
     }
 }

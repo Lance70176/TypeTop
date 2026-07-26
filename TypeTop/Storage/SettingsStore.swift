@@ -20,6 +20,8 @@ final class SettingsStore {
         } else {
             self.settings = AppSettings()
         }
+        // 啟動時套用已儲存的介面語言
+        L10n.shared.language = settings.uiLanguage
     }
 
     private func save() {

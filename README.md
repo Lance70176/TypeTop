@@ -1,5 +1,7 @@
 # TypeTop
 
+**繁體中文** · [简体中文](README.zh-Hans.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
+
 **macOS 語音輸入工具 —— 按住右側 ⌘ 說話，放開就把文字打進游標所在的任何地方。**
 
 [![Download](https://img.shields.io/github/v/release/Lance70176/TypeTop?label=下載最新版&style=for-the-badge)](https://github.com/Lance70176/TypeTop/releases/latest)
@@ -35,6 +37,7 @@
 - **錄音浮層與音效**：螢幕角落顯示錄音狀態與音量，選單列圖示同步變化，提示音可開關
 - **錄音時靜音系統音訊**：說話時自動壓下背景音樂／影片聲音，避免被一起錄進去
 - **選單列常駐**：不佔 Dock，可設定開機自動啟動
+- **五種介面語言**：繁體中文、简体中文、English、日本語、한국어，設定裡即時切換不用重啟
 
 ### 辨識與修正
 
@@ -129,6 +132,7 @@ TypeTop 需要至少一組 **Groq API Key**（語音辨識用）才能運作。
 | 項目 | 說明 |
 |------|------|
 | 按住說話快捷鍵 | 選擇啟動鍵，共七種修飾鍵可選 |
+| 介面語言 | 切換 app 介面語言，與辨識語言相同的五種，即時生效 |
 | 輔助使用權限 | 未授權時無法輸入文字，點「前往設定」開啟系統設定 |
 | 麥克風權限 | 未授權時無法錄音 |
 | 播放音效提示 | 開始／結束錄音時的提示音 |
@@ -139,7 +143,7 @@ TypeTop 需要至少一組 **Groq API Key**（語音辨識用）才能運作。
 
 | 項目 | 說明 |
 |------|------|
-| 辨識語言 | 主要語言（預設繁體中文），Whisper 會優先辨識該語言 |
+| 辨識語言 | 主要語言（預設繁體中文），Whisper 會優先辨識該語言。切換後，未手動改過的 Whisper／LLM 提示詞會自動換成該語言的版本 |
 | 中英文混合模式 | 同時辨識中英文夾雜的內容 |
 | 中英文之間自動加空格 | `使用React框架` → `使用 React 框架` |
 | 標點符號風格 | 全形／半形／無標點／保持原樣 |
@@ -178,6 +182,9 @@ TypeTop 需要至少一組 **Groq API Key**（語音辨識用）才能運作。
 
 **說話說到一半想反悔？**
 錄音中按下其他修飾鍵（⌥ / ⌃ / fn 等）即可取消，不會輸入任何文字。
+
+**介面可以換語言嗎？**
+可以。「一般 → 介面語言」提供繁體中文、简体中文、English、日本語、한국어，選了立刻生效不用重啟。另外「語言 → 辨識語言」是決定你說哪種語言、輸出哪種語言，兩者各自獨立。
 
 **我的語音會被送到哪裡？**
 音訊只會送到你設定的 STT 供應商（Groq）；文字修正會送到你選的 LLM 供應商。選 Apple 本機模型或 Ollama 時，修正階段完全在本機進行。API Key 存在本機的 Keychain 與應用程式支援目錄（權限 0600）。
@@ -221,4 +228,5 @@ DMG 會產生在 `build/TypeTop.dmg`。
 | 語意修正 | 多供應商 LLM（OpenAI 相容 Chat Completion API）＋ Apple FoundationModels |
 | 文字輸入 | CGEvent 鍵盤事件模擬 |
 | 設定儲存 | UserDefaults + Keychain（API Key）＋ `apiaccounts.json`（多帳號，0600） |
+| 多語言 | app 內字串表與執行期切換（`TypeTop/Localization`） |
 | 專案管理 | XcodeGen（project.yml） |

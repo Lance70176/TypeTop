@@ -37,12 +37,12 @@ struct APISettingsTab: View {
     var body: some View {
         Form {
             // MARK: - STT Section
-            Section("語音辨識（STT）— Groq") {
+            Section(L("api.section.stt")) {
                 accountRows(scope: sttScope, placeholder: "gsk_...")
                 addAccountRow(placeholder: "gsk_...", key: $newSTTKey, visible: $newSTTKeyVisible, scope: sttScope)
 
                 HStack {
-                    Button("測試連線") {
+                    Button(L("api.test-connection")) {
                         testSTT()
                     }
                     .disabled(accountStore.accounts(sttScope).isEmpty || testingSTT)
@@ -54,23 +54,23 @@ struct APISettingsTab: View {
                 }
 
                 HStack {
-                    Text("模型")
+                    Text(L("api.model"))
                     Spacer()
                     Text(APIProvider.groq.modelName)
                         .foregroundStyle(.secondary)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("如何取得 Groq API Key：")
+                    Text(L("api.howto.title"))
                         .font(.caption).bold()
-                    Text("1. 前往 console.groq.com 註冊／登入")
+                    Text(L("api.howto.step1"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("2. 左側選單點「API Keys」→「Create API Key」")
+                    Text(L("api.howto.step2"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("3. 複製 gsk_ 開頭的 Key 貼到上方欄位")
+                    Text(L("api.howto.step3"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("可新增多組不同帳號的 Key，達免費額度時會自動切換。")
+                    Text(L("api.howto.multi-account"))
                         .font(.caption).foregroundStyle(.secondary).italic()
-                    Button("開啟 Groq Console") {
+                    Button(L("api.open-groq-console")) {
                         NSWorkspace.shared.open(URL(string: "https://console.groq.com/keys")!)
                     }
                     .font(.caption)
@@ -80,8 +80,8 @@ struct APISettingsTab: View {
             }
 
             // MARK: - LLM Section
-            Section("語意修正（LLM）— \(selectedLLM.displayName)") {
-                Picker("LLM 供應商", selection: Bindable(settingsStore).settings.llmProvider) {
+            Section(L("api.section.llm", selectedLLM.displayName)) {
+                Picker(L("api.llm-provider"), selection: Bindable(settingsStore).settings.llmProvider) {
                     ForEach(LLMProvider.allCases) { provider in
                         Text(provider.displayName).tag(provider)
                     }
@@ -91,7 +91,7 @@ struct APISettingsTab: View {
                 if selectedLLM == .custom {
                     TextField("Base URL", text: Bindable(settingsStore).settings.customLLMBaseURL)
                         .textFieldStyle(.roundedBorder)
-                    TextField("模型名稱", text: Bindable(settingsStore).settings.customLLMModel)
+                    TextField(L("api.model-name"), text: Bindable(settingsStore).settings.customLLMModel)
                         .textFieldStyle(.roundedBorder)
                 }
 
@@ -102,7 +102,7 @@ struct APISettingsTab: View {
                 }
 
                 HStack {
-                    Text("模型")
+                    Text(L("api.model"))
                     Spacer()
                     Text(settingsStore.llmModel())
                         .foregroundStyle(.secondary)
@@ -111,13 +111,13 @@ struct APISettingsTab: View {
                 // Apple 本機模型可用性狀態
                 if selectedLLM == .apple {
                     HStack {
-                        Text("狀態")
+                        Text(L("api.status"))
                         Spacer()
                         if let reason = AppleFoundationModel.unavailableReason {
                             Text(reason)
                                 .foregroundStyle(.orange)
                         } else {
-                            Text("可用")
+                            Text(L("api.available"))
                                 .foregroundStyle(.green)
                         }
                     }
@@ -129,7 +129,7 @@ struct APISettingsTab: View {
                         .font(.caption).foregroundStyle(.secondary)
 
                     if let helpURL = selectedLLM.helpURL {
-                        Button("開啟 \(selectedLLM.displayName) 官網") {
+                        Button(L("api.open-website", selectedLLM.displayName)) {
                             NSWorkspace.shared.open(URL(string: helpURL)!)
                         }
                         .font(.caption)
@@ -140,7 +140,7 @@ struct APISettingsTab: View {
 
                 // 測試 LLM 連線
                 HStack {
-                    Button("測試 LLM 連線") {
+                    Button(L("api.test-llm-connection")) {
                         testLLM()
                     }
                     .disabled(testingLLM || (selectedLLM.requiresAPIKey && accountStore.accounts(llmScope).isEmpty))
@@ -153,23 +153,23 @@ struct APISettingsTab: View {
             }
 
             // MARK: - 今日用量（僅顯示使用中帳號的統計）
-            Section("今日用量（本地統計）") {
+            Section(L("usage.section")) {
                 let sttProvider = settingsStore.settings.activeProvider
                 let sttUsageScope = APIAccountStore.scope(stt: sttProvider)
                 let sttAccount = accountStore.activeAccount(sttUsageScope)
                 let llmAccount = accountStore.activeAccount(llmScope)
 
                 HStack {
-                    Text("語音辨識（\(sttProvider.displayName)\(sttAccount.map { " — \($0.label)" } ?? "")）")
+                    Text(L("usage.stt", sttProvider.displayName + (sttAccount.map { " — \($0.label)" } ?? "")))
                     Spacer()
-                    Text("\(usageTracker.todayRequests(accountStore.usageKey(sttUsageScope))) 次")
+                    Text(L("usage.requests", String(usageTracker.todayRequests(accountStore.usageKey(sttUsageScope)))))
                         .foregroundStyle(.secondary)
                 }
                 HStack {
-                    Text("語意修正（\(selectedLLM.displayName)\(llmAccount.map { " — \($0.label)" } ?? "")）")
+                    Text(L("usage.llm", selectedLLM.displayName + (llmAccount.map { " — \($0.label)" } ?? "")))
                     Spacer()
                     let usageKey = accountStore.usageKey(llmScope)
-                    Text("\(usageTracker.todayRequests(usageKey)) 次 / \(usageTracker.todayTokens(usageKey)) tokens")
+                    Text(L("usage.requests-tokens", String(usageTracker.todayRequests(usageKey)), String(usageTracker.todayTokens(usageKey))))
                         .foregroundStyle(.secondary)
                 }
 
@@ -178,7 +178,7 @@ struct APISettingsTab: View {
                    let limit = usageTracker.groqLimits[accountStore.usageKey(sttUsageScope)],
                    let remaining = limit.remainingRequests {
                     HStack {
-                        Text("Groq 語音辨識剩餘額度\(sttAccount.map { "（\($0.label)）" } ?? "")")
+                        Text(L("usage.groq-stt-remaining", sttAccount.map { "（\($0.label)）" } ?? ""))
                         Spacer()
                         Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
                             .foregroundStyle(remaining < 50 ? .orange : .secondary)
@@ -188,14 +188,14 @@ struct APISettingsTab: View {
                    let limit = usageTracker.groqLimits[accountStore.usageKey(llmScope)],
                    let remaining = limit.remainingRequests {
                     HStack {
-                        Text("Groq 語意修正剩餘額度\(llmAccount.map { "（\($0.label)）" } ?? "")")
+                        Text(L("usage.groq-llm-remaining", llmAccount.map { "（\($0.label)）" } ?? ""))
                         Spacer()
                         Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
                             .foregroundStyle(remaining < 50 ? .orange : .secondary)
                     }
                 }
 
-                Text("次數與 tokens 為本 app 的本地統計，僅計入目前使用中的帳號；Groq 剩餘額度來自官方回應。其他供應商的官方額度請至各家控制台查看（Gemini：aistudio.google.com/rate-limit）。")
+                Text(L("usage.note"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -217,7 +217,7 @@ struct APISettingsTab: View {
                                 .font(.caption)
                         }
                         .buttonStyle(.borderless)
-                        .help("複製訊息")
+                        .help(L("api.copy-message"))
                     }
                 }
             }
@@ -249,7 +249,7 @@ struct APISettingsTab: View {
                             .foregroundStyle(account.id == activeID ? Color.accentColor : Color.secondary)
                     }
                     .buttonStyle(.borderless)
-                    .help("設為使用中")
+                    .help(L("api.set-active"))
 
                     Text(account.label)
                     Text(account.maskedKey)
@@ -257,7 +257,7 @@ struct APISettingsTab: View {
                         .foregroundStyle(.secondary)
 
                     if account.id == activeID {
-                        Text("使用中")
+                        Text(L("api.in-use"))
                             .font(.caption2)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -280,7 +280,7 @@ struct APISettingsTab: View {
                         Image(systemName: editingAccountID == account.id ? "chevron.up" : "pencil")
                     }
                     .buttonStyle(.borderless)
-                    .help(editingAccountID == account.id ? "收合" : "檢視／編輯名稱與 Key")
+                    .help(editingAccountID == account.id ? L("api.collapse") : L("api.edit-key"))
 
                     Button(role: .destructive) {
                         if editingAccountID == account.id { endEditing() }
@@ -289,15 +289,15 @@ struct APISettingsTab: View {
                         Image(systemName: "trash")
                     }
                     .buttonStyle(.borderless)
-                    .help("刪除此帳號")
+                    .help(L("api.delete-account"))
                 }
 
                 if editingAccountID == account.id {
                     HStack {
-                        Text("名稱")
+                        Text(L("api.name"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        TextField("帳號名稱", text: $editingLabel)
+                        TextField(L("api.account-name"), text: $editingLabel)
                             .textFieldStyle(.roundedBorder)
                     }
 
@@ -323,11 +323,11 @@ struct APISettingsTab: View {
                     HStack {
                         Spacer()
 
-                        Button("取消") {
+                        Button(L("common.cancel")) {
                             endEditing()
                         }
 
-                        Button("儲存") {
+                        Button(L("common.save")) {
                             accountStore.update(
                                 accountID: account.id,
                                 label: editingLabelTrimmed,
@@ -344,7 +344,7 @@ struct APISettingsTab: View {
         }
 
         if accounts.count > 1 {
-            Text("達額度上限（HTTP 429）時會自動切換到下一組帳號。")
+            Text(L("api.failover-note"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -390,7 +390,7 @@ struct APISettingsTab: View {
             }
             .buttonStyle(.borderless)
 
-            Button("新增帳號") {
+            Button(L("api.add-account")) {
                 let trimmed = key.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return }
                 accountStore.add(key: trimmed, scope: scope)
@@ -413,9 +413,9 @@ struct APISettingsTab: View {
                 let testAudio = createSilentWAV(durationSeconds: 1)
                 let result = try await service.transcribe(audioData: testAudio, language: "zh", prompt: nil)
                 let accountLabel = accountStore.activeAccount(sttScope).map { "，\($0.label)" } ?? ""
-                testResult = (true, "Groq STT 連線成功！（\(String(format: "%.1f", result.duration))秒\(accountLabel)）")
+                testResult = (true, L("test.stt-ok", String(format: "%.1f", result.duration), accountLabel))
             } catch {
-                testResult = (false, "Groq STT：\(error.localizedDescription)")
+                testResult = (false, L("test.stt-fail", error.localizedDescription))
             }
             testingSTT = false
         }
@@ -435,9 +435,9 @@ struct APISettingsTab: View {
                         let response = try await AppleFoundationModel.process(
                             "測試", systemPrompt: "回覆「OK」即可。", temperature: 0
                         )
-                        testResult = (true, "Apple 本機模型可用！（回應：\(response)）")
+                        testResult = (true, L("test.apple-ok", response))
                     } else {
-                        testResult = (false, "Apple 本機模型：\(AppleFoundationModel.unavailableReason ?? "無法使用")")
+                        testResult = (false, L("test.apple-fail", AppleFoundationModel.unavailableReason ?? L("error.apple.unavailable")))
                     }
                     testingLLM = false
                     return
@@ -456,9 +456,9 @@ struct APISettingsTab: View {
                 )
                 let response = try await llm.process("測試")
                 let accountLabel = accountStore.activeAccount(llmScope).map { "，\($0.label)" } ?? ""
-                testResult = (true, "\(provider.displayName) LLM 連線成功！（回應：\(response)\(accountLabel)）")
+                testResult = (true, L("test.llm-ok", provider.displayName, response, accountLabel))
             } catch {
-                testResult = (false, "\(settingsStore.settings.llmProvider.displayName) LLM：\(error.localizedDescription)")
+                testResult = (false, L("test.llm-fail", settingsStore.settings.llmProvider.displayName, error.localizedDescription))
             }
             testingLLM = false
         }

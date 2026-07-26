@@ -135,10 +135,10 @@ final class APIAccountStore {
 
     private func nextLabel(in s: ScopeAccounts) -> String {
         var number = s.accounts.count + 1
-        while s.accounts.contains(where: { $0.label == "帳號 \(number)" }) {
+        while s.accounts.contains(where: { $0.label == L("api.account-n", number) }) {
             number += 1
         }
-        return "帳號 \(number)"
+        return L("api.account-n", number)
     }
 
     // MARK: - 持久化

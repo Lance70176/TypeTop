@@ -31,18 +31,18 @@ enum QuotaAlert {
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "\(current.displayName) 已達用量上限"
+        alert.messageText = L("quota.title", current.displayName)
         if let candidate {
-            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
-            alert.addButton(withTitle: "切換到 \(candidate.displayName)")
-            alert.addButton(withTitle: "稍後再說")
+            alert.informativeText = L("quota.llm-switch", current.displayName, candidate.displayName)
+            alert.addButton(withTitle: L("quota.switch-to", candidate.displayName))
+            alert.addButton(withTitle: L("quota.later"))
             NSApp.activate(ignoringOtherApps: true)
             if alert.runModal() == .alertFirstButtonReturn {
                 settingsStore.settings.llmProvider = candidate
             }
         } else {
-            alert.informativeText = "語意修正（LLM）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商或帳號的 Key。"
-            alert.addButton(withTitle: "知道了")
+            alert.informativeText = L("quota.llm-none", current.displayName)
+            alert.addButton(withTitle: L("quota.got-it"))
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
         }
@@ -61,18 +61,18 @@ enum QuotaAlert {
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "\(current.displayName) 已達用量上限"
+        alert.messageText = L("quota.title", current.displayName)
         if let candidate {
-            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。要切換到 \(candidate.displayName) 嗎？"
-            alert.addButton(withTitle: "切換到 \(candidate.displayName)")
-            alert.addButton(withTitle: "稍後再說")
+            alert.informativeText = L("quota.stt-switch", current.displayName, candidate.displayName)
+            alert.addButton(withTitle: L("quota.switch-to", candidate.displayName))
+            alert.addButton(withTitle: L("quota.later"))
             NSApp.activate(ignoringOtherApps: true)
             if alert.runModal() == .alertFirstButtonReturn {
                 settingsStore.settings.activeProvider = candidate
             }
         } else {
-            alert.informativeText = "語音辨識（STT）供應商 \(current.displayName) 的所有帳號均回報已達額度上限（HTTP 429）。沒有其他已設定 API Key 的供應商可切換，請至「API 設定」新增其他供應商或帳號的 Key。"
-            alert.addButton(withTitle: "知道了")
+            alert.informativeText = L("quota.stt-none", current.displayName)
+            alert.addButton(withTitle: L("quota.got-it"))
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
         }
