@@ -1,30 +1,58 @@
 import SwiftUI
 
-/// API Key 管理設定頁面
+/// API Key 管理設定頁面（每個供應商可設定多組帳號，達額度時自動切換）
 struct APISettingsTab: View {
     private var settingsStore = SettingsStore.shared
+    private var usageTracker = UsageTracker.shared
+    private var accountStore = APIAccountStore.shared
 
-    // STT
-    @State private var groqKey: String = ""
-    @State private var groqKeyVisible: Bool = false
+    // 新增帳號輸入
+    @State private var newSTTKey: String = ""
+    @State private var newSTTKeyVisible: Bool = false
+    @State private var newLLMKey: String = ""
+    @State private var newLLMKeyVisible: Bool = false
+
     @State private var testingSTT: Bool = false
-
-    // LLM
-    @State private var llmKey: String = ""
-    @State private var llmKeyVisible: Bool = false
     @State private var testingLLM: Bool = false
-
     @State private var testResult: (success: Bool, message: String)?
+
+    // 編輯既有帳號的名稱與 Key
+    @State private var editingAccountID: UUID?
+    @State private var editingLabel: String = ""
+    @State private var editingKey: String = ""
+    @State private var editingKeyVisible: Bool = true
 
     private var selectedLLM: LLMProvider {
         settingsStore.settings.llmProvider
+    }
+
+    private var sttScope: String {
+        APIAccountStore.scope(stt: .groq)
+    }
+
+    private var llmScope: String {
+        APIAccountStore.scope(llm: selectedLLM)
     }
 
     var body: some View {
         Form {
             // MARK: - STT Section
             Section("語音辨識（STT）— Groq") {
-                sttKeyField
+                accountRows(scope: sttScope, placeholder: "gsk_...")
+                addAccountRow(placeholder: "gsk_...", key: $newSTTKey, visible: $newSTTKeyVisible, scope: sttScope)
+
+                HStack {
+                    Button("測試連線") {
+                        testSTT()
+                    }
+                    .disabled(accountStore.accounts(sttScope).isEmpty || testingSTT)
+
+                    if testingSTT {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+
                 HStack {
                     Text("模型")
                     Spacer()
@@ -40,7 +68,7 @@ struct APISettingsTab: View {
                         .font(.caption).foregroundStyle(.secondary)
                     Text("3. 複製 gsk_ 開頭的 Key 貼到上方欄位")
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("Groq 提供免費額度，日常使用綽綽有餘。")
+                    Text("可新增多組不同帳號的 Key，達免費額度時會自動切換。")
                         .font(.caption).foregroundStyle(.secondary).italic()
                     Button("開啟 Groq Console") {
                         NSWorkspace.shared.open(URL(string: "https://console.groq.com/keys")!)
@@ -67,9 +95,10 @@ struct APISettingsTab: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                // API Key 欄位（Ollama 不需要）
+                // API Key 帳號列表（Ollama / Apple 不需要）
                 if selectedLLM.requiresAPIKey {
-                    llmKeyField
+                    accountRows(scope: llmScope, placeholder: selectedLLM.keyPlaceholder)
+                    addAccountRow(placeholder: selectedLLM.keyPlaceholder, key: $newLLMKey, visible: $newLLMKeyVisible, scope: llmScope)
                 }
 
                 HStack {
@@ -77,6 +106,21 @@ struct APISettingsTab: View {
                     Spacer()
                     Text(settingsStore.llmModel())
                         .foregroundStyle(.secondary)
+                }
+
+                // Apple 本機模型可用性狀態
+                if selectedLLM == .apple {
+                    HStack {
+                        Text("狀態")
+                        Spacer()
+                        if let reason = AppleFoundationModel.unavailableReason {
+                            Text(reason)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Text("可用")
+                                .foregroundStyle(.green)
+                        }
+                    }
                 }
 
                 // 說明文字
@@ -99,13 +143,61 @@ struct APISettingsTab: View {
                     Button("測試 LLM 連線") {
                         testLLM()
                     }
-                    .disabled(testingLLM || (selectedLLM.requiresAPIKey && llmKey.isEmpty))
+                    .disabled(testingLLM || (selectedLLM.requiresAPIKey && accountStore.accounts(llmScope).isEmpty))
 
                     if testingLLM {
                         ProgressView()
                             .controlSize(.small)
                     }
                 }
+            }
+
+            // MARK: - 今日用量（僅顯示使用中帳號的統計）
+            Section("今日用量（本地統計）") {
+                let sttProvider = settingsStore.settings.activeProvider
+                let sttUsageScope = APIAccountStore.scope(stt: sttProvider)
+                let sttAccount = accountStore.activeAccount(sttUsageScope)
+                let llmAccount = accountStore.activeAccount(llmScope)
+
+                HStack {
+                    Text("語音辨識（\(sttProvider.displayName)\(sttAccount.map { " — \($0.label)" } ?? "")）")
+                    Spacer()
+                    Text("\(usageTracker.todayRequests(accountStore.usageKey(sttUsageScope))) 次")
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("語意修正（\(selectedLLM.displayName)\(llmAccount.map { " — \($0.label)" } ?? "")）")
+                    Spacer()
+                    let usageKey = accountStore.usageKey(llmScope)
+                    Text("\(usageTracker.todayRequests(usageKey)) 次 / \(usageTracker.todayTokens(usageKey)) tokens")
+                        .foregroundStyle(.secondary)
+                }
+
+                // Groq 回應 headers 提供的即時剩餘額度（使用中帳號）
+                if sttProvider == .groq,
+                   let limit = usageTracker.groqLimits[accountStore.usageKey(sttUsageScope)],
+                   let remaining = limit.remainingRequests {
+                    HStack {
+                        Text("Groq 語音辨識剩餘額度\(sttAccount.map { "（\($0.label)）" } ?? "")")
+                        Spacer()
+                        Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
+                            .foregroundStyle(remaining < 50 ? .orange : .secondary)
+                    }
+                }
+                if selectedLLM == .groq,
+                   let limit = usageTracker.groqLimits[accountStore.usageKey(llmScope)],
+                   let remaining = limit.remainingRequests {
+                    HStack {
+                        Text("Groq 語意修正剩餘額度\(llmAccount.map { "（\($0.label)）" } ?? "")")
+                        Spacer()
+                        Text("\(remaining)\(limit.limitRequests.map { " / \($0)" } ?? "") 次")
+                            .foregroundStyle(remaining < 50 ? .orange : .secondary)
+                    }
+                }
+
+                Text("次數與 tokens 為本 app 的本地統計，僅計入目前使用中的帳號；Groq 剩餘額度來自官方回應。其他供應商的官方額度請至各家控制台查看（Gemini：aistudio.google.com/rate-limit）。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if let result = testResult {
@@ -132,110 +224,184 @@ struct APISettingsTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .onAppear {
-            loadKeys()
-        }
         .onChange(of: settingsStore.settings.llmProvider) { _, _ in
-            loadLLMKey()
+            newLLMKey = ""
+            newLLMKeyVisible = false
+            endEditing()
             testResult = nil
         }
     }
 
-    // MARK: - STT Key Field
+    // MARK: - 帳號列表
 
     @ViewBuilder
-    private var sttKeyField: some View {
-        HStack {
-            if groqKeyVisible {
-                TextField("gsk_...", text: $groqKey)
-                    .textFieldStyle(.roundedBorder)
-            } else {
-                SecureField("gsk_...", text: $groqKey)
-                    .textFieldStyle(.roundedBorder)
-            }
-            Button {
-                groqKeyVisible.toggle()
-            } label: {
-                Image(systemName: groqKeyVisible ? "eye.slash" : "eye")
-            }
-            .buttonStyle(.borderless)
-        }
-        .onChange(of: groqKey) { _, newValue in
-            if !newValue.isEmpty {
-                settingsStore.setAPIKey(newValue, for: .groq)
-            }
-        }
+    private func accountRows(scope: String, placeholder: String) -> some View {
+        let accounts = accountStore.accounts(scope)
+        let activeID = accountStore.activeAccount(scope)?.id
 
-        HStack {
-            Button("測試連線") {
-                testSTT()
-            }
-            .disabled(groqKey.isEmpty || testingSTT)
+        ForEach(accounts) { account in
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Button {
+                        accountStore.setActive(accountID: account.id, scope: scope)
+                    } label: {
+                        Image(systemName: account.id == activeID ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(account.id == activeID ? Color.accentColor : Color.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .help("設為使用中")
 
-            if testingSTT {
-                ProgressView()
-                    .controlSize(.small)
-            }
+                    Text(account.label)
+                    Text(account.maskedKey)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
 
-            Spacer()
+                    if account.id == activeID {
+                        Text("使用中")
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.green.opacity(0.15)))
+                            .foregroundStyle(.green)
+                    }
 
-            if !groqKey.isEmpty {
-                Button("清除", role: .destructive) {
-                    groqKey = ""
-                    settingsStore.clearAPIKey(for: .groq)
+                    Spacer()
+
+                    Button {
+                        if editingAccountID == account.id {
+                            endEditing()
+                        } else {
+                            editingAccountID = account.id
+                            editingLabel = account.label
+                            editingKey = account.key
+                            editingKeyVisible = true
+                        }
+                    } label: {
+                        Image(systemName: editingAccountID == account.id ? "chevron.up" : "pencil")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(editingAccountID == account.id ? "收合" : "檢視／編輯名稱與 Key")
+
+                    Button(role: .destructive) {
+                        if editingAccountID == account.id { endEditing() }
+                        accountStore.remove(accountID: account.id, scope: scope)
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("刪除此帳號")
+                }
+
+                if editingAccountID == account.id {
+                    HStack {
+                        Text("名稱")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("帳號名稱", text: $editingLabel)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text("Key")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        if editingKeyVisible {
+                            TextField(placeholder, text: $editingKey)
+                                .textFieldStyle(.roundedBorder)
+                        } else {
+                            SecureField(placeholder, text: $editingKey)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        Button {
+                            editingKeyVisible.toggle()
+                        } label: {
+                            Image(systemName: editingKeyVisible ? "eye.slash" : "eye")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+
+                    HStack {
+                        Spacer()
+
+                        Button("取消") {
+                            endEditing()
+                        }
+
+                        Button("儲存") {
+                            accountStore.update(
+                                accountID: account.id,
+                                label: editingLabelTrimmed,
+                                key: editingKeyTrimmed,
+                                scope: scope
+                            )
+                            endEditing()
+                        }
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(!hasEdits(for: account))
+                    }
                 }
             }
         }
+
+        if accounts.count > 1 {
+            Text("達額度上限（HTTP 429）時會自動切換到下一組帳號。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
-    // MARK: - LLM Key Field
+    private var editingKeyTrimmed: String {
+        editingKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var editingLabelTrimmed: String {
+        editingLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 名稱或 Key 有實際變動才允許儲存；兩者都不可留空
+    private func hasEdits(for account: APIAccount) -> Bool {
+        guard !editingLabelTrimmed.isEmpty, !editingKeyTrimmed.isEmpty else { return false }
+        return editingLabelTrimmed != account.label || editingKeyTrimmed != account.key
+    }
+
+    private func endEditing() {
+        editingAccountID = nil
+        editingLabel = ""
+        editingKey = ""
+        editingKeyVisible = true
+    }
+
+    // MARK: - 新增帳號
 
     @ViewBuilder
-    private var llmKeyField: some View {
+    private func addAccountRow(placeholder: String, key: Binding<String>, visible: Binding<Bool>, scope: String) -> some View {
         HStack {
-            if llmKeyVisible {
-                TextField(selectedLLM.keyPlaceholder, text: $llmKey)
+            if visible.wrappedValue {
+                TextField(placeholder, text: key)
                     .textFieldStyle(.roundedBorder)
             } else {
-                SecureField(selectedLLM.keyPlaceholder, text: $llmKey)
+                SecureField(placeholder, text: key)
                     .textFieldStyle(.roundedBorder)
             }
             Button {
-                llmKeyVisible.toggle()
+                visible.wrappedValue.toggle()
             } label: {
-                Image(systemName: llmKeyVisible ? "eye.slash" : "eye")
+                Image(systemName: visible.wrappedValue ? "eye.slash" : "eye")
             }
             .buttonStyle(.borderless)
-        }
-        .onChange(of: llmKey) { _, newValue in
-            if !newValue.isEmpty {
-                settingsStore.setLLMApiKey(newValue, for: selectedLLM)
+
+            Button("新增帳號") {
+                let trimmed = key.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
+                accountStore.add(key: trimmed, scope: scope)
+                key.wrappedValue = ""
+                visible.wrappedValue = false
             }
-        }
-
-        HStack {
-            Spacer()
-
-            if !llmKey.isEmpty {
-                Button("清除", role: .destructive) {
-                    llmKey = ""
-                    settingsStore.clearLLMApiKey(for: selectedLLM)
-                }
-            }
+            .disabled(key.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
-    // MARK: - Load / Test
-
-    private func loadKeys() {
-        groqKey = settingsStore.apiKey(for: .groq) ?? ""
-        loadLLMKey()
-    }
-
-    private func loadLLMKey() {
-        llmKey = settingsStore.llmApiKey(for: settingsStore.settings.llmProvider) ?? ""
-        llmKeyVisible = false
-    }
+    // MARK: - Test
 
     private func testSTT() {
         testingSTT = true
@@ -246,7 +412,8 @@ struct APISettingsTab: View {
                 let service = STTServiceFactory.create(for: .groq)
                 let testAudio = createSilentWAV(durationSeconds: 1)
                 let result = try await service.transcribe(audioData: testAudio, language: "zh", prompt: nil)
-                testResult = (true, "Groq STT 連線成功！（\(String(format: "%.1f", result.duration))秒）")
+                let accountLabel = accountStore.activeAccount(sttScope).map { "，\($0.label)" } ?? ""
+                testResult = (true, "Groq STT 連線成功！（\(String(format: "%.1f", result.duration))秒\(accountLabel)）")
             } catch {
                 testResult = (false, "Groq STT：\(error.localizedDescription)")
             }
@@ -261,6 +428,21 @@ struct APISettingsTab: View {
         Task {
             do {
                 let provider = settingsStore.settings.llmProvider
+
+                // Apple 本機模型不走 HTTP，直接呼叫 FoundationModels
+                if provider == .apple {
+                    if #available(macOS 26.0, *), AppleFoundationModel.isAvailable {
+                        let response = try await AppleFoundationModel.process(
+                            "測試", systemPrompt: "回覆「OK」即可。", temperature: 0
+                        )
+                        testResult = (true, "Apple 本機模型可用！（回應：\(response)）")
+                    } else {
+                        testResult = (false, "Apple 本機模型：\(AppleFoundationModel.unavailableReason ?? "無法使用")")
+                    }
+                    testingLLM = false
+                    return
+                }
+
                 let apiKey = settingsStore.llmApiKey(for: provider) ?? ""
                 let url = settingsStore.llmURL(for: provider)
                 let model = settingsStore.llmModel(for: provider)
@@ -269,10 +451,12 @@ struct APISettingsTab: View {
                     url: url,
                     model: model,
                     apiKey: apiKey,
-                    systemPrompt: "回覆「OK」即可。"
+                    systemPrompt: "回覆「OK」即可。",
+                    temperature: settingsStore.settings.llmTemperature
                 )
                 let response = try await llm.process("測試")
-                testResult = (true, "\(provider.displayName) LLM 連線成功！（回應：\(response)）")
+                let accountLabel = accountStore.activeAccount(llmScope).map { "，\($0.label)" } ?? ""
+                testResult = (true, "\(provider.displayName) LLM 連線成功！（回應：\(response)\(accountLabel)）")
             } catch {
                 testResult = (false, "\(settingsStore.settings.llmProvider.displayName) LLM：\(error.localizedDescription)")
             }
