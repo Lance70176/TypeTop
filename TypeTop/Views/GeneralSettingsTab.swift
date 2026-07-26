@@ -11,44 +11,55 @@ struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
-            Section("快捷鍵") {
-                Picker("按住說話快捷鍵", selection: Bindable(settingsStore).settings.activationKey) {
+            Section(L("general.section.shortcut")) {
+                Picker(L("general.push-to-talk-key"), selection: Bindable(settingsStore).settings.activationKey) {
                     ForEach(ActivationKey.allCases) { key in
                         Text(key.displayName).tag(key)
                     }
                 }
                 .onChange(of: settingsStore.settings.activationKey) { _, newValue in
                     HotkeyManager.shared.updateHotkey(key: newValue)
+                    AppDelegate.shared?.rebuildMenu()
+                }
+
+                Picker(L("general.interface-language"), selection: Bindable(settingsStore).settings.uiLanguage) {
+                    ForEach(SupportedLanguage.allCases) { language in
+                        Text(language.displayName).tag(language)
+                    }
+                }
+                .onChange(of: settingsStore.settings.uiLanguage) { _, newValue in
+                    L10n.shared.language = newValue
+                    AppDelegate.shared?.rebuildMenu()
                 }
             }
 
-            Section("權限") {
+            Section(L("general.section.permissions")) {
                 HStack {
-                    Text("輔助使用權限")
+                    Text(L("general.accessibility"))
                     Spacer()
                     if accessibilityGranted {
-                        Label("已授權", systemImage: "checkmark.circle.fill")
+                        Label(L("general.granted"), systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     } else {
-                        Button("前往設定") {
+                        Button(L("general.open-settings")) {
                             openAccessibilitySettings()
                         }
                     }
                 }
 
                 HStack {
-                    Text("麥克風權限")
+                    Text(L("general.microphone"))
                     Spacer()
                     if micPermissionGranted {
-                        Label("已授權", systemImage: "checkmark.circle.fill")
+                        Label(L("general.granted"), systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     } else {
-                        Button("請求權限") {
+                        Button(L("general.request-access")) {
                             Task {
                                 micPermissionGranted = await AudioRecorder.requestPermission()
                             }
                         }
-                        Button("前往設定") {
+                        Button(L("general.open-settings")) {
                             AudioRecorder.openMicrophoneSettings()
                         }
                     }
@@ -66,20 +77,20 @@ struct GeneralSettingsTab: View {
                 permissionTimer = nil
             }
 
-            Section("行為") {
-                Toggle("播放音效提示", isOn: Bindable(settingsStore).settings.playSoundEffects)
+            Section(L("general.section.behavior")) {
+                Toggle(L("general.play-sounds"), isOn: Bindable(settingsStore).settings.playSoundEffects)
 
-                Toggle("錄音時靜音系統音訊", isOn: Bindable(settingsStore).settings.muteSystemAudioWhileRecording)
+                Toggle(L("general.mute-system-audio"), isOn: Bindable(settingsStore).settings.muteSystemAudioWhileRecording)
 
-                Toggle("開機自動啟動", isOn: Bindable(settingsStore).settings.launchAtLogin)
+                Toggle(L("general.launch-at-login"), isOn: Bindable(settingsStore).settings.launchAtLogin)
                     .onChange(of: settingsStore.settings.launchAtLogin) { _, newValue in
                         setLaunchAtLogin(newValue)
                     }
             }
 
-            Section("關於") {
+            Section(L("general.section.about")) {
                 HStack {
-                    Text("版本")
+                    Text(L("general.version"))
                     Spacer()
                     Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
                         .foregroundStyle(.secondary)
@@ -87,7 +98,7 @@ struct GeneralSettingsTab: View {
                 HStack {
                     Text("TypeTop")
                     Spacer()
-                    Text("語音輸入，好好打字")
+                    Text(L("general.tagline"))
                         .foregroundStyle(.secondary)
                 }
             }

@@ -43,12 +43,12 @@ enum TranscriptionState: Equatable {
 
     var statusText: String {
         switch self {
-        case .idle: return "就緒"
-        case .recording: return "錄音中..."
-        case .processing: return "辨識中..."
-        case .completed(let text): return "完成：\(text.prefix(20))..."
-        case .cancelled: return "已取消"
-        case .error(let msg): return "錯誤：\(msg)"
+        case .idle: return L("state.idle")
+        case .recording: return L("state.recording-ellipsis")
+        case .processing: return L("state.transcribing-ellipsis")
+        case .completed(let text): return L("state.done", String(text.prefix(20)))
+        case .cancelled: return L("state.cancelled")
+        case .error(let msg): return L("state.error", msg)
         }
     }
 }

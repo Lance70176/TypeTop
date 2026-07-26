@@ -84,7 +84,7 @@ struct GroqWhisperService: STTService {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "未知錯誤"
+            let errorMsg = String(data: data, encoding: .utf8) ?? L("error.unknown")
             throw STTError.apiError("HTTP \(httpResponse.statusCode): \(errorMsg)")
         }
 

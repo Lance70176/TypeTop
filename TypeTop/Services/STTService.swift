@@ -22,12 +22,12 @@ enum STTError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noAPIKey: return "未設定 API Key"
-        case .invalidResponse: return "API 回應格式錯誤"
-        case .apiError(let msg): return "API 錯誤：\(msg)"
-        case .networkError(let err): return "網路錯誤：\(err.localizedDescription)"
-        case .emptyAudio: return "音訊資料為空"
-        case .rateLimited: return "已達 API 用量上限（HTTP 429）"
+        case .noAPIKey: return L("error.no-api-key")
+        case .invalidResponse: return L("error.invalid-response")
+        case .apiError(let msg): return L("error.api", msg)
+        case .networkError(let err): return L("error.network", err.localizedDescription)
+        case .emptyAudio: return L("error.empty-audio")
+        case .rateLimited: return L("error.rate-limited")
         }
     }
 }

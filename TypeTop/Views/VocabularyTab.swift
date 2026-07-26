@@ -25,13 +25,13 @@ struct VocabularyTab: View {
         VStack(spacing: 0) {
             // 工具列
             HStack {
-                TextField("搜尋詞彙...", text: $searchText)
+                TextField(L("vocab.search"), text: $searchText)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 200)
 
                 Spacer()
 
-                Text("\(vocabularyStore.library.entries.count) 筆詞彙")
+                Text(L("vocab.count", String(vocabularyStore.library.entries.count)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -42,11 +42,11 @@ struct VocabularyTab: View {
                 }
 
                 Menu {
-                    Button("匯出詞彙庫 (JSON)...") { exportVocabulary() }
-                    Button("匯出注音詞庫 (.txt)...") { exportZhuyinTXT() }
-                    Button("匯入詞彙庫...") { importVocabulary() }
+                    Button(L("vocab.export-json")) { exportVocabulary() }
+                    Button(L("vocab.export-zhuyin")) { exportZhuyinTXT() }
+                    Button(L("vocab.import")) { importVocabulary() }
                     Divider()
-                    Button("重置為預設", role: .destructive) {
+                    Button(L("common.reset-default"), role: .destructive) {
                         vocabularyStore.library = VocabularyLibrary()
                         vocabularyStore.save()
                     }
@@ -61,11 +61,11 @@ struct VocabularyTab: View {
             // 詞彙列表
             if filteredEntries.isEmpty {
                 ContentUnavailableView {
-                    Label("沒有詞彙", systemImage: "text.book.closed")
+                    Label(L("vocab.empty-title"), systemImage: "text.book.closed")
                 } description: {
                     VStack(spacing: 6) {
-                        Text("點擊 + 新增自訂詞彙替換規則")
-                        Text("用於修正語音辨識經常出錯的詞彙\n例如：「太好了 → TypeTop」「派森 → Python」")
+                        Text(L("vocab.empty-line1"))
+                        Text(L("vocab.empty-line2"))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
@@ -94,8 +94,8 @@ struct VocabularyTab: View {
                 vocabularyStore.update(updated)
             }
         }
-        .alert("匯入錯誤", isPresented: $showImportAlert, presenting: importError) { _ in
-            Button("確定") {}
+        .alert(L("vocab.import-error"), isPresented: $showImportAlert, presenting: importError) { _ in
+            Button(L("common.ok")) {}
         } message: { error in
             Text(error)
         }
@@ -119,7 +119,7 @@ struct VocabularyTab: View {
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.plainText]
-        panel.nameFieldStringValue = "個人詞庫.txt"
+        panel.nameFieldStringValue = L("vocab.default-filename")
         panel.canCreateDirectories = true
 
         if panel.runModal() == .OK, let url = panel.url {
@@ -212,23 +212,23 @@ struct VocabularyEditSheet: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text(existingEntry == nil ? "新增詞彙" : "編輯詞彙")
+            Text(existingEntry == nil ? L("vocab.new-entry") : L("vocab.edit-entry"))
                 .font(.headline)
 
             Form {
-                TextField("辨識錯誤文字（來源）", text: $source)
-                TextField("正確文字（目標）", text: $target)
-                TextField("備註（選填）", text: $note)
-                Toggle("啟用", isOn: $isEnabled)
+                TextField(L("vocab.source"), text: $source)
+                TextField(L("vocab.target"), text: $target)
+                TextField(L("vocab.note"), text: $note)
+                Toggle(L("vocab.enabled"), isOn: $isEnabled)
             }
 
             HStack {
-                Button("取消") { dismiss() }
+                Button(L("common.cancel")) { dismiss() }
                     .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
-                Button(existingEntry == nil ? "新增" : "儲存") {
+                Button(existingEntry == nil ? L("common.add") : L("common.save")) {
                     var entry = existingEntry ?? VocabularyEntry(source: source, target: target)
                     entry.source = source
                     entry.target = target

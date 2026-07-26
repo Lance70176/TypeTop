@@ -109,9 +109,9 @@ struct RecordingOverlayView: View {
 
     private var statusText: String {
         switch state {
-        case .recording: return "錄音中"
-        case .processing: return "辨識中"
-        case .cancelled: return "已取消"
+        case .recording: return L("state.recording")
+        case .processing: return L("state.transcribing")
+        case .cancelled: return L("state.cancelled")
         default: return ""
         }
     }

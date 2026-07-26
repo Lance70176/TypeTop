@@ -6,22 +6,22 @@ struct SettingsWindow: View {
         TabView {
             GeneralSettingsTab()
                 .tabItem {
-                    Label("一般", systemImage: "gearshape")
+                    Label(L("tab.general"), systemImage: "gearshape")
                 }
 
             APISettingsTab()
                 .tabItem {
-                    Label("API 設定", systemImage: "key")
+                    Label(L("tab.api"), systemImage: "key")
                 }
 
             LanguageSettingsTab()
                 .tabItem {
-                    Label("語言", systemImage: "globe")
+                    Label(L("tab.language"), systemImage: "globe")
                 }
 
             VocabularyTab()
                 .tabItem {
-                    Label("詞彙庫", systemImage: "text.book.closed")
+                    Label(L("tab.vocabulary"), systemImage: "text.book.closed")
                 }
         }
         .frame(width: 550, height: 450)

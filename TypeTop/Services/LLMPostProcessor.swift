@@ -25,7 +25,7 @@ struct LLMPostProcessor {
         guard !text.isEmpty else { return text }
 
         guard let requestURL = URL(string: url) else {
-            throw LLMError.apiError("無效的 URL: \(url)")
+            throw LLMError.apiError(L("error.invalid-url", url))
         }
 
         var request = URLRequest(url: requestURL)
@@ -64,7 +64,7 @@ struct LLMPostProcessor {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "未知錯誤"
+            let errorMsg = String(data: data, encoding: .utf8) ?? L("error.unknown")
             throw LLMError.apiError("HTTP \(httpResponse.statusCode): \(errorMsg)")
         }
 
@@ -94,9 +94,9 @@ enum LLMError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidResponse: return "LLM API 回應格式錯誤"
-        case .apiError(let msg): return "LLM API 錯誤：\(msg)"
-        case .rateLimited: return "已達 LLM API 用量上限（HTTP 429）"
+        case .invalidResponse: return L("error.llm-invalid-response")
+        case .apiError(let msg): return L("error.llm-api", msg)
+        case .rateLimited: return L("error.llm-rate-limited")
         }
     }
 }
