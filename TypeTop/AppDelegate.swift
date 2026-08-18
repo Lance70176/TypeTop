@@ -5,11 +5,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var editShortcutMonitor: Any?
     private let pipeline = TranscriptionPipeline.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         setupMenuBar()
+        setupEditShortcutMonitor()
 
         // 首次啟動時彈出輔助使用權限提示
         _ = HotkeyManager.shared.requestAccessibilityPermission()
@@ -25,6 +27,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         pipeline.deactivate()
+        if let monitor = editShortcutMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+    }
+
+    // MARK: - 編輯快捷鍵
+
+    /// LSUIElement App 沒有主選單，⌘A/⌘C/⌘V 等編輯快捷鍵不會自動分派，
+    /// 需自行攔截並沿 responder chain 送出標準編輯動作
+    private func setupEditShortcutMonitor() {
+        editShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard let key = event.charactersIgnoringModifiers?.lowercased() else { return event }
+
+            let action: Selector?
+            switch (flags, key) {
+            case (.command, "a"): action = #selector(NSText.selectAll(_:))
+            case (.command, "c"): action = #selector(NSText.copy(_:))
+            case (.command, "v"): action = #selector(NSText.paste(_:))
+            case (.command, "x"): action = #selector(NSText.cut(_:))
+            case (.command, "z"): action = Selector(("undo:"))
+            case ([.command, .shift], "z"): action = Selector(("redo:"))
+            default: action = nil
+            }
+
+            guard let action else { return event }
+            return NSApp.sendAction(action, to: nil, from: nil) ? nil : event
+        }
     }
 
     // MARK: - MenuBar 設定
